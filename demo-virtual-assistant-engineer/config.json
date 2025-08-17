@@ -1,0 +1,58 @@
+{
+    "assistants": [
+        {
+            "name": "Engineering Assistant",
+            "capabilities": [
+                "Code generation",
+                "Code review",
+                "Technical documentation",
+                "API design",
+                "System architecture"
+            ],
+            "model": "claude-3-opus-20240229",
+            "tools": [
+                "code_interpreter",
+                "file_browser",
+                "web_search"
+            ],
+            "settings": {
+                "temperature": 0.7,
+                "max_tokens": 4000
+            }
+        },
+        {
+            "name": "Project Manager Assistant",
+            "capabilities": [
+                "Task tracking",
+                "Timeline estimation",
+                "Resource allocation",
+                "Risk assessment",
+                "Status reporting"
+            ],
+            "model": "claude-3-sonnet-20240229",
+            "tools": [
+                "calendar",
+                "document_editor",
+                "spreadsheet"
+            ],
+            "settings": {
+                "temperature": 0.5,
+                "max_tokens": 2000
+            }
+        }
+    ],
+    "server_settings": {
+        "host": "0.0.0.0",
+        "port": 8000,
+        "debug": false,
+        "log_level": "info",
+        "max_connections": 100
+    },
+    "auth": {
+        "require_api_key": true,
+        "allowed_origins": [
+            "http://localhost:3000",
+            "https://example.com"
+        ]
+    }
+}
