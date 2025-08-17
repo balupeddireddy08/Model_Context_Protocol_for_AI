@@ -118,105 +118,7 @@ graph LR
     style J fill:#fff2cc,stroke:#333,stroke-width:1px
 ```
 
-## Building Blocks: The Three Primitives
-
-MCP servers provide three types of capabilities:
-
-1. **Resources**: Read-only data (files, emails, messages)
-2. **Tools**: Functions the AI can call to perform actions
-3. **Prompts**: Templates to guide the AI's responses
-
-```mermaid
-graph TD
-    A[MCP Server] --> B[Resources<br/>Read-only Data]
-    A --> C[Tools<br/>Action Functions]
-    A --> D[Prompts<br/>Response Templates]
-    
-    B --> B1[Files]
-    B --> B2[Database Records]
-    B --> B3[Messages]
-    
-    C --> C1[Search]
-    C --> C2[Create]
-    C --> C3[Update]
-    
-    style A fill:#d5f9e5,stroke:#333,stroke-width:2px
-    style B fill:#d5e5f9,stroke:#333,stroke-width:1px
-    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
-    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
-```
-
-### The Library Analogy
-
-MCP servers are like libraries:
-- **Resources** are like books you can read but not modify
-- **Tools** are like services the library offers (search catalog, reserve books)
-- **Prompts** are like the reference librarian who helps you format your questions properly
-
-## How MCP Works: A Simple Flow
-
-When an AI needs information or wants to use a tool:
-
-1. The host sends a request through its MCP client
-2. The client forwards the request to the appropriate MCP server
-3. The server processes the request and returns results
-4. The host incorporates the results into the AI's context
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant H as Host (AI App)
-    participant C as MCP Client
-    participant S as MCP Server
-    participant E as External Service
-    
-    U->>H: "Find my recent emails about project X"
-    H->>C: List available resources/tools
-    C->>S: tools/list or resources/list
-    S->>C: Available capabilities
-    C->>H: Available capabilities
-    H->>C: Request specific data
-    C->>S: resources/read or tools/call
-    S->>E: API call to service
-    E->>S: Data/Results
-    S->>C: Formatted response
-    C->>H: Formatted response
-    H->>U: "I found 3 emails about project X..."
-```
-
-## Data and Transport: How Messages Flow
-
-MCP has two layers:
-
-1. **Data Layer**: Defines the message format (JSON-RPC 2.0)
-2. **Transport Layer**: Handles how messages are sent
-
-```mermaid
-graph TD
-    subgraph "Data Layer"
-    A[JSON-RPC 2.0 Messages]
-    end
-    
-    subgraph "Transport Layer"
-    B[Local Stdio]
-    C[Remote HTTP]
-    end
-    
-    A --- B
-    A --- C
-    
-    style A fill:#d5e5f9,stroke:#333,stroke-width:1px
-    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style C fill:#d5f9e5,stroke:#333,stroke-width:1px
-```
-
-### The Mail Analogy
-
-MCP's layers are like sending a letter:
-- The **Data Layer** is like the letter's content and format (written in English, with greeting and signature)
-- The **Transport Layer** is like the delivery method (hand delivery or postal service)
-
-## JSON-RPC 2.0: The Language of MCP
+## Communication in MCP: JSON-RPC 2.0
 
 MCP uses **JSON-RPC 2.0** as its communication protocol. Think of JSON-RPC 2.0 as the "language" that all MCP participants speak - it's simple, lightweight, and works everywhere.
 
@@ -252,7 +154,107 @@ graph TD
     style D fill:#f9f9d5,stroke:#333,stroke-width:1px
 ```
 
-### Complete MCP Interaction Flow
+### MCP Method Namespaces
+
+MCP organizes its methods into logical namespaces:
+
+```mermaid
+graph TD
+    A[MCP Methods] --> B[tools/*]
+    A --> C[resources/*]
+    A --> D[prompts/*]
+    A --> E[initialize*]
+    A --> F[ping]
+    
+    B --> B1[tools/list]
+    B --> B2[tools/call]
+    
+    C --> C1[resources/list]
+    C --> C2[resources/read]
+    C --> C3[resources/subscribe]
+    
+    D --> D1[prompts/list]
+    D --> D2[prompts/get]
+    
+    E --> E1[initialize]
+    E --> E2[initialized]
+    
+    style A fill:#d5e5f9,stroke:#333,stroke-width:2px
+    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
+    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
+    style E fill:#ffe6cc,stroke:#333,stroke-width:1px
+    style F fill:#e6ccff,stroke:#333,stroke-width:1px
+```
+
+### Data and Transport Layers
+
+MCP has two layers:
+
+1. **Data Layer**: Defines the message format (JSON-RPC 2.0)
+2. **Transport Layer**: Handles how messages are sent
+
+```mermaid
+graph TD
+    subgraph "Data Layer"
+    A[JSON-RPC 2.0 Messages]
+    end
+    
+    subgraph "Transport Layer"
+    B[Local Stdio]
+    C[Remote HTTP]
+    end
+    
+    A --- B
+    A --- C
+    
+    style A fill:#d5e5f9,stroke:#333,stroke-width:1px
+    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style C fill:#d5f9e5,stroke:#333,stroke-width:1px
+```
+
+#### The Mail Analogy
+
+MCP's layers are like sending a letter:
+- The **Data Layer** is like the letter's content and format (written in English, with greeting and signature)
+- The **Transport Layer** is like the delivery method (hand delivery or postal service)
+
+## Building Blocks: The Three Primitives
+
+MCP servers provide three types of capabilities:
+
+1. **Resources**: Read-only data (files, emails, messages)
+2. **Tools**: Functions the AI can call to perform actions
+3. **Prompts**: Templates to guide the AI's responses
+
+```mermaid
+graph TD
+    A[MCP Server] --> B[Resources<br/>Read-only Data]
+    A --> C[Tools<br/>Action Functions]
+    A --> D[Prompts<br/>Response Templates]
+    
+    B --> B1[Files]
+    B --> B2[Database Records]
+    B --> B3[Messages]
+    
+    C --> C1[Search]
+    C --> C2[Create]
+    C --> C3[Update]
+    
+    style A fill:#d5f9e5,stroke:#333,stroke-width:2px
+    style B fill:#d5e5f9,stroke:#333,stroke-width:1px
+    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
+    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
+```
+
+### The Library Analogy
+
+MCP servers are like libraries:
+- **Resources** are like books you can read but not modify
+- **Tools** are like services the library offers (search catalog, reserve books)
+- **Prompts** are like the reference librarian who helps you format your questions properly
+
+## Complete MCP Interaction Flow
 
 Here's how a complete MCP session works from connection to shutdown using JSON-RPC 2.0:
 
@@ -298,9 +300,20 @@ sequenceDiagram
     Note over S: Server exits gracefully
 ```
 
-### Real MCP Message Examples
+### Connection Lifecycle
 
-#### 1. Tool Discovery
+The complete MCP interaction flow shown above includes these key phases:
+
+1. **Initialization**: Client and server exchange capabilities during handshake
+2. **Discovery**: Client learns what tools and resources are available
+3. **Normal Operations**: Tools are called, resources are read, notifications sent
+4. **Shutdown**: Clean termination when the session ends
+
+This standardized lifecycle ensures reliable communication and proper resource management.
+
+## Real MCP Message Examples
+
+### 1. Tool Discovery
 
 **Request** (Client asks server for available tools):
 ```json
@@ -337,7 +350,7 @@ sequenceDiagram
 }
 ```
 
-#### 2. Tool Execution
+### 2. Tool Execution
 
 **Request** (Client calls a tool):
 ```json
@@ -372,7 +385,7 @@ sequenceDiagram
 }
 ```
 
-#### 3. Resource Reading
+### 3. Resource Reading
 
 **Request** (Client reads a resource):
 ```json
@@ -403,7 +416,7 @@ sequenceDiagram
 }
 ```
 
-#### 4. Error Handling
+### 4. Error Handling
 
 When something goes wrong, servers return error responses:
 
@@ -420,50 +433,6 @@ When something goes wrong, servers return error responses:
   }
 }
 ```
-
-### MCP Method Namespaces
-
-MCP organizes its methods into logical namespaces:
-
-```mermaid
-graph TD
-    A[MCP Methods] --> B[tools/*]
-    A --> C[resources/*]
-    A --> D[prompts/*]
-    A --> E[initialize*]
-    A --> F[ping]
-    
-    B --> B1[tools/list]
-    B --> B2[tools/call]
-    
-    C --> C1[resources/list]
-    C --> C2[resources/read]
-    C --> C3[resources/subscribe]
-    
-    D --> D1[prompts/list]
-    D --> D2[prompts/get]
-    
-    E --> E1[initialize]
-    E --> E2[initialized]
-    
-    style A fill:#d5e5f9,stroke:#333,stroke-width:2px
-    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
-    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
-    style E fill:#ffe6cc,stroke:#333,stroke-width:1px
-    style F fill:#e6ccff,stroke:#333,stroke-width:1px
-```
-
-### Connection Lifecycle
-
-The complete MCP interaction flow shown above includes these key phases:
-
-1. **Initialization**: Client and server exchange capabilities during handshake
-2. **Discovery**: Client learns what tools and resources are available
-3. **Normal Operations**: Tools are called, resources are read, notifications sent
-4. **Shutdown**: Clean termination when the session ends
-
-This standardized lifecycle ensures reliable communication and proper resource management.
 
 ### The Protocol Benefits
 
@@ -519,3 +488,15 @@ If you're interested in working with MCP:
 MCP represents a significant step forward in making AI more useful and connected. By providing a standardized way for AI models to interact with external data and tools, MCP enables more capable, flexible, and personalized AI applications while maintaining user control.
 
 Just as web standards like HTTP and REST enabled the explosive growth of web applications, MCP is positioned to drive the next wave of AI innovation by breaking down the walls between AI models and the wider digital world.
+
+## References
+
+1. [Introduction - Model Context Protocol](https://modelcontextprotocol.io/docs/getting-started/intro)
+2. [Architecture Overview - Model Context Protocol](https://modelcontextprotocol.io/docs/learn/architecture)
+3. [Introducing the Model Context Protocol \ Anthropic](https://www.anthropic.com/news/model-context-protocol)
+4. [Understanding the Model Context Protocol (MCP) | deepset Blog](https://www.deepset.ai/blog/understanding-the-model-context-protocol-mcp)
+5. [The Architectural Elegance of Model Context Protocol (MCP) - The ML Architect](https://themlarchitect.com/blog/the-architectural-elegance-of-model-context-protocol-mcp/)
+6. [Server Concepts - Model Context Protocol](https://modelcontextprotocol.io/docs/learn/server-concepts)
+7. [Model Context Protocol - Model Context Protocol](http://modelcontextprotocol.io/overview)
+8. [Model Context Protocol (MCP): Landscape, Security Threats, and Future Research Directions](https://arxiv.org/abs/2503.23278)
+9. [Model Context Protocol (MCP) at First Glance: Studying the Security and Maintainability of MCP Servers](https://arxiv.org/abs/2506.13538)
