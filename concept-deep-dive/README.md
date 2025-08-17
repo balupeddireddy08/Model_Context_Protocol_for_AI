@@ -88,54 +88,68 @@ At a high level, MCP has three primary layers:
 3. **Service Layer**: External systems (GitHub, file systems, databases, etc.)
 
 ```mermaid
-graph LR
-    subgraph "Application Host Process"
+graph TB
+    subgraph "Host Layer"
+        direction TB
         H[Host / AI Model]
-        C1[Client 1]
-        C2[Client 2]
-        C3[Client 3]
+        subgraph "Clients"
+            direction LR
+            C1[Client 1]
+            C2[Client 2] 
+            C3[Client 3]
+        end
         H --> C1
         H --> C2
         H --> C3
     end
 
     subgraph "MCP Layer"
-        S1[Server 1<br>Files & Git]
-        S2[Server 2<br>Database]
-        S3[Server 3<br>External APIs]
-        
-        C1 <-->|JSON-RPC 2.0| S1
-        C2 <-->|JSON-RPC 2.0| S2
-        C3 <-->|JSON-RPC 2.0| S3
+        direction LR
+        S1[Server 1<br/>Files & Git]
+        S2[Server 2<br/>Database]
+        S3[Server 3<br/>External APIs]
     end
 
     subgraph "Service Layer"
-        R1[("Local<br>Resource A")]
-        R2[("Local<br>Resource B")]
-        R3[("Remote<br>Resource C")]
-        
-        S1 <--> R1
-        S2 <--> R2
-        S3 <--> R3
+        direction LR
+        R1[("Local Files<br/>& Git Repos")]
+        R2[("Database<br/>Records")]
+        R3[("External<br/>APIs")]
     end
     
-    subgraph "Transport Options"
-    I[Stdio<br/>Local]
-    J[HTTP/SSE<br/>Remote]
+    subgraph "Transport Layer"
+        direction LR
+        T1[Stdio<br/>Local Process]
+        T2[HTTP/SSE<br/>Remote Service]
     end
     
-    C1 -.->|Uses| I
-    C3 -.->|Uses| J
+    %% Connections between layers
+    C1 <-->|JSON-RPC 2.0| S1
+    C2 <-->|JSON-RPC 2.0| S2
+    C3 <-->|JSON-RPC 2.0| S3
     
-    style H fill:#f9d5e5,stroke:#333,stroke-width:1px
+    S1 <--> R1
+    S2 <--> R2
+    S3 <--> R3
+    
+    %% Transport connections
+    C1 -.->|Uses| T1
+    C2 -.->|Uses| T1
+    C3 -.->|Uses| T2
+    
+    %% Styling
+    style H fill:#f9d5e5,stroke:#333,stroke-width:2px
     style C1 fill:#d5e5f9,stroke:#333,stroke-width:1px
     style C2 fill:#d5e5f9,stroke:#333,stroke-width:1px
     style C3 fill:#d5e5f9,stroke:#333,stroke-width:1px
     style S1 fill:#d5f9e5,stroke:#333,stroke-width:1px
     style S2 fill:#d5f9e5,stroke:#333,stroke-width:1px
     style S3 fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style I fill:#fff2cc,stroke:#333,stroke-width:1px
-    style J fill:#fff2cc,stroke:#333,stroke-width:1px
+    style R1 fill:#f0f0f0,stroke:#333,stroke-width:1px
+    style R2 fill:#f0f0f0,stroke:#333,stroke-width:1px
+    style R3 fill:#f0f0f0,stroke:#333,stroke-width:1px
+    style T1 fill:#fff2cc,stroke:#333,stroke-width:1px
+    style T2 fill:#fff2cc,stroke:#333,stroke-width:1px
 ```
 
 ### Core Components in Detail
