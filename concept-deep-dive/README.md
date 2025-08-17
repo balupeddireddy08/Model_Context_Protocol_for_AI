@@ -90,9 +90,9 @@ graph LR
     end
     
     subgraph "MCP Layer"
-    B <--> C[MCP Server 1]
-    B <--> D[MCP Server 2]
-    B <--> E[MCP Server 3]
+    B <-->|JSON-RPC 2.0| C[MCP Server 1]
+    B <-->|JSON-RPC 2.0| D[MCP Server 2]
+    B <-->|JSON-RPC 2.0| E[MCP Server 3]
     end
     
     subgraph "Service Layer"
@@ -101,11 +101,21 @@ graph LR
     E --> H[Database]
     end
     
+    subgraph "Transport Options"
+    I[Stdio<br/>Local]
+    J[HTTP/SSE<br/>Remote]
+    end
+    
+    B -.->|Uses| I
+    B -.->|Uses| J
+    
     style A fill:#f9d5e5,stroke:#333,stroke-width:1px
     style B fill:#d5e5f9,stroke:#333,stroke-width:1px
     style C fill:#d5f9e5,stroke:#333,stroke-width:1px
     style D fill:#d5f9e5,stroke:#333,stroke-width:1px
     style E fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style I fill:#fff2cc,stroke:#333,stroke-width:1px
+    style J fill:#fff2cc,stroke:#333,stroke-width:1px
 ```
 
 ### The Power Strip Analogy
@@ -182,13 +192,13 @@ sequenceDiagram
 
 MCP has two layers:
 
-1. **Data Layer**: Defines the message format (JSON-RPC)
+1. **Data Layer**: Defines the message format (JSON-RPC 2.0)
 2. **Transport Layer**: Handles how messages are sent
 
 ```mermaid
 graph TD
     subgraph "Data Layer"
-    A[JSON-RPC Messages]
+    A[JSON-RPC 2.0 Messages]
     end
     
     subgraph "Transport Layer"
@@ -209,6 +219,267 @@ graph TD
 MCP's layers are like sending a letter:
 - The **Data Layer** is like the letter's content and format (written in English, with greeting and signature)
 - The **Transport Layer** is like the delivery method (hand delivery or postal service)
+
+## JSON-RPC 2.0: The Language of MCP
+
+MCP uses **JSON-RPC 2.0** as its communication protocol. Think of JSON-RPC 2.0 as the "language" that all MCP participants speak - it's simple, lightweight, and works everywhere.
+
+### Why JSON-RPC 2.0?
+
+MCP chose JSON-RPC 2.0 because it's:
+- **Transport-agnostic**: Works over stdio, HTTP, WebSocket, etc.
+- **Stateless and lightweight**: No complex state management
+- **Human-readable**: Easy to debug and understand
+- **Language-agnostic**: Works with any programming language
+- **Standardized**: Based on an existing, proven specification
+
+### JSON-RPC 2.0 Message Types
+
+```mermaid
+graph TD
+    A[JSON-RPC 2.0 Messages] --> B[Requests<br/>Need Response]
+    A --> C[Responses<br/>Reply to Requests]
+    A --> D[Notifications<br/>No Response Expected]
+    
+    B --> B1[Has 'id' field]
+    B --> B2[method + params]
+    
+    C --> C1[Has same 'id']
+    C --> C2[result OR error]
+    
+    D --> D1[No 'id' field]
+    D --> D2[method + params]
+    
+    style A fill:#d5e5f9,stroke:#333,stroke-width:2px
+    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
+    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
+```
+
+### MCP Message Flow
+
+Here's how a complete MCP interaction works using JSON-RPC 2.0:
+
+```mermaid
+sequenceDiagram
+    participant H as Host
+    participant C as MCP Client
+    participant S as MCP Server
+    
+    Note over H,S: 1. Discovery Phase
+    H->>C: "What tools are available?"
+    C->>S: tools/list (JSON-RPC Request)
+    Note over S: Process request
+    S->>C: Available tools (JSON-RPC Response)
+    C->>H: List of tools
+    
+    Note over H,S: 2. Tool Execution Phase
+    H->>C: "Use searchFiles tool"
+    C->>S: tools/call (JSON-RPC Request)
+    Note over S: Execute tool
+    S->>C: Tool results (JSON-RPC Response)
+    C->>H: Results
+    
+    Note over H,S: 3. Notifications (Optional)
+    S->>C: resource/updated (JSON-RPC Notification)
+    C->>H: Resource changed
+```
+
+### Real MCP Message Examples
+
+#### 1. Tool Discovery
+
+**Request** (Client asks server for available tools):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list",
+  "params": {}
+}
+```
+
+**Response** (Server lists its tools):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "searchFlights",
+        "description": "Find flights between two airports",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "origin": { "type": "string" },
+            "destination": { "type": "string" },
+            "date": { "type": "string", "format": "date" }
+          },
+          "required": ["origin", "destination", "date"]
+        }
+      }
+    ]
+  }
+}
+```
+
+#### 2. Tool Execution
+
+**Request** (Client calls a tool):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "searchFlights",
+    "arguments": {
+      "origin": "SFO",
+      "destination": "LAX",
+      "date": "2025-09-10"
+    }
+  }
+}
+```
+
+**Response** (Server returns results):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Found 3 flights:\n- UA123 at 08:00 ($120)\n- DL456 at 09:15 ($135)\n- AA789 at 10:30 ($115)"
+      }
+    ]
+  }
+}
+```
+
+#### 3. Resource Reading
+
+**Request** (Client reads a resource):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "resources/read",
+  "params": { 
+    "uri": "file:///Documents/report.txt" 
+  }
+}
+```
+
+**Response** (Server returns resource content):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "contents": [
+      {
+        "uri": "file:///Documents/report.txt",
+        "mimeType": "text/plain",
+        "text": "Q3 Financial Report\n==================\nRevenue increased by 15%..."
+      }
+    ]
+  }
+}
+```
+
+#### 4. Error Handling
+
+When something goes wrong, servers return error responses:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "error": {
+    "code": -32602,
+    "message": "Invalid params",
+    "data": {
+      "details": "Missing required parameter: origin"
+    }
+  }
+}
+```
+
+### MCP Method Namespaces
+
+MCP organizes its methods into logical namespaces:
+
+```mermaid
+graph TD
+    A[MCP Methods] --> B[tools/*]
+    A --> C[resources/*]
+    A --> D[prompts/*]
+    A --> E[initialize*]
+    A --> F[ping]
+    
+    B --> B1[tools/list]
+    B --> B2[tools/call]
+    
+    C --> C1[resources/list]
+    C --> C2[resources/read]
+    C --> C3[resources/subscribe]
+    
+    D --> D1[prompts/list]
+    D --> D2[prompts/get]
+    
+    E --> E1[initialize]
+    E --> E2[initialized]
+    
+    style A fill:#d5e5f9,stroke:#333,stroke-width:2px
+    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
+    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
+    style E fill:#ffe6cc,stroke:#333,stroke-width:1px
+    style F fill:#e6ccff,stroke:#333,stroke-width:1px
+```
+
+### Lifecycle Messages
+
+MCP uses specific JSON-RPC messages for connection lifecycle:
+
+1. **Initialization**: Handshake between client and server
+2. **Capabilities Exchange**: Share what each side can do
+3. **Shutdown**: Clean termination
+
+```mermaid
+sequenceDiagram
+    participant C as MCP Client
+    participant S as MCP Server
+    
+    Note over C,S: Connection Established
+    C->>S: initialize (with capabilities)
+    S->>C: Response (with server capabilities)
+    C->>S: initialized (notification)
+    
+    Note over C,S: Normal Operation
+    C->>S: various methods...
+    S->>C: responses/notifications...
+    
+    Note over C,S: Clean Shutdown
+    C->>S: shutdown request
+    S->>C: shutdown response
+    Note over S: Server exits
+```
+
+### The Protocol Benefits
+
+Using JSON-RPC 2.0 gives MCP several advantages:
+
+1. **Discoverability**: Clients can ask "what can you do?" (`tools/list`, `resources/list`)
+2. **Type Safety**: JSON schemas define expected input/output
+3. **Error Handling**: Standardized error responses
+4. **Extensibility**: Easy to add new methods without breaking compatibility
+5. **Debugging**: Human-readable messages for easy troubleshooting
+
+This structured approach makes MCP both powerful and accessible - developers can quickly understand what any MCP server offers and how to use it.
 
 ## Security and User Control
 
