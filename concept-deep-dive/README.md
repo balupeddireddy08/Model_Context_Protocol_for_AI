@@ -118,10 +118,6 @@ graph LR
     style J fill:#fff2cc,stroke:#333,stroke-width:1px
 ```
 
-### The Power Strip Analogy
-
-If MCP is like a USB-C port, then an AI host with multiple MCP clients is like a power strip - it multiplies your connection options. Each socket in the power strip connects to a different device, just as each MCP client connects to a different server.
-
 ## Building Blocks: The Three Primitives
 
 MCP servers provide three types of capabilities:
@@ -256,9 +252,9 @@ graph TD
     style D fill:#f9f9d5,stroke:#333,stroke-width:1px
 ```
 
-### MCP Message Flow
+### Complete MCP Interaction Flow
 
-Here's how a complete MCP interaction works using JSON-RPC 2.0:
+Here's how a complete MCP session works from connection to shutdown using JSON-RPC 2.0:
 
 ```mermaid
 sequenceDiagram
@@ -266,23 +262,40 @@ sequenceDiagram
     participant C as MCP Client
     participant S as MCP Server
     
-    Note over H,S: 1. Discovery Phase
-    H->>C: "What tools are available?"
-    C->>S: tools/list (JSON-RPC Request)
-    Note over S: Process request
-    S->>C: Available tools (JSON-RPC Response)
-    C->>H: List of tools
+    Note over H,S: 1. Connection & Initialization
+    C->>S: initialize (with client capabilities)
+    S->>C: Response (with server capabilities)
+    C->>S: initialized (notification)
     
-    Note over H,S: 2. Tool Execution Phase
+    Note over H,S: 2. Discovery Phase
+    H->>C: "What can this server do?"
+    C->>S: tools/list (JSON-RPC Request)
+    S->>C: Available tools (JSON-RPC Response)
+    C->>S: resources/list (JSON-RPC Request)
+    S->>C: Available resources (JSON-RPC Response)
+    C->>H: Server capabilities
+    
+    Note over H,S: 3. Normal Operations
     H->>C: "Use searchFiles tool"
     C->>S: tools/call (JSON-RPC Request)
     Note over S: Execute tool
     S->>C: Tool results (JSON-RPC Response)
     C->>H: Results
     
-    Note over H,S: 3. Notifications (Optional)
-    S->>C: resource/updated (JSON-RPC Notification)
-    C->>H: Resource changed
+    H->>C: "Read that document"
+    C->>S: resources/read (JSON-RPC Request)
+    Note over S: Fetch resource
+    S->>C: Resource content (JSON-RPC Response)
+    C->>H: Document content
+    
+    Note over H,S: 4. Notifications (Optional)
+    S->>C: resources/updated (JSON-RPC Notification)
+    C->>H: "Resource has changed"
+    
+    Note over H,S: 5. Clean Shutdown
+    C->>S: shutdown (JSON-RPC Request)
+    S->>C: shutdown response
+    Note over S: Server exits gracefully
 ```
 
 ### Real MCP Message Examples
@@ -441,33 +454,16 @@ graph TD
     style F fill:#e6ccff,stroke:#333,stroke-width:1px
 ```
 
-### Lifecycle Messages
+### Connection Lifecycle
 
-MCP uses specific JSON-RPC messages for connection lifecycle:
+The complete MCP interaction flow shown above includes these key phases:
 
-1. **Initialization**: Handshake between client and server
-2. **Capabilities Exchange**: Share what each side can do
-3. **Shutdown**: Clean termination
+1. **Initialization**: Client and server exchange capabilities during handshake
+2. **Discovery**: Client learns what tools and resources are available
+3. **Normal Operations**: Tools are called, resources are read, notifications sent
+4. **Shutdown**: Clean termination when the session ends
 
-```mermaid
-sequenceDiagram
-    participant C as MCP Client
-    participant S as MCP Server
-    
-    Note over C,S: Connection Established
-    C->>S: initialize (with capabilities)
-    S->>C: Response (with server capabilities)
-    C->>S: initialized (notification)
-    
-    Note over C,S: Normal Operation
-    C->>S: various methods...
-    S->>C: responses/notifications...
-    
-    Note over C,S: Clean Shutdown
-    C->>S: shutdown request
-    S->>C: shutdown response
-    Note over S: Server exits
-```
+This standardized lifecycle ensures reliable communication and proper resource management.
 
 ### The Protocol Benefits
 
@@ -509,20 +505,6 @@ MCP is rapidly gaining adoption across the AI industry:
 - Hundreds of open-source MCP servers exist for various services
 - Developer tools (Zed, Replit) are integrating MCP
 - Research is ongoing to improve security and capabilities
-
-```mermaid
-graph TD
-    A[MCP Ecosystem] --> B[Major Platforms<br/>AWS, GitHub, OpenAI]
-    A --> C[Open Source Servers<br/>100s Available]
-    A --> D[Developer Tools<br/>IDEs, Code Assistants]
-    A --> E[Research<br/>Security, Extensions]
-    
-    style A fill:#d5e5f9,stroke:#333,stroke-width:2px
-    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style C fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style D fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style E fill:#d5f9e5,stroke:#333,stroke-width:1px
-```
 
 ## Getting Started with MCP
 
