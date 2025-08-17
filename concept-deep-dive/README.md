@@ -47,7 +47,11 @@ graph TD
     style F fill:#eeeeee,stroke:#333,stroke-width:1px
 ```
 
-## Core Participants: Who's Who in MCP
+## Core Architecture
+
+MCP uses a client-host-server architecture where each host can run multiple client instances. This architecture enables integration of AI capabilities across applications while maintaining clear security boundaries.
+
+### Participants: Who's Who in MCP
 
 MCP has three main participants:
 
@@ -67,7 +71,7 @@ graph LR
     style D fill:#f9f9d5,stroke:#333,stroke-width:1px
 ```
 
-### The Restaurant Analogy
+#### The Restaurant Analogy
 
 Think of MCP as a restaurant service:
 - The **Host** (AI application) is like you, the hungry customer
@@ -75,9 +79,9 @@ Think of MCP as a restaurant service:
 - The **Server** is like the kitchen that prepares what you ordered
 - **External Services** are like food suppliers providing ingredients to the kitchen
 
-## MCP Architecture: How It All Fits Together
+### Three-Tier Architecture
 
-MCP uses a three-tier architecture:
+At a high level, MCP has three primary layers:
 
 1. **Host Layer**: Contains the AI model and user interface
 2. **MCP Layer**: Clients and servers that handle requests and responses
@@ -85,20 +89,34 @@ MCP uses a three-tier architecture:
 
 ```mermaid
 graph LR
-    subgraph "Host Layer"
-    A[AI Model] --- B[MCP Client]
+    subgraph "Application Host Process"
+        H[Host / AI Model]
+        C1[Client 1]
+        C2[Client 2]
+        C3[Client 3]
+        H --> C1
+        H --> C2
+        H --> C3
     end
-    
+
     subgraph "MCP Layer"
-    B <-->|JSON-RPC 2.0| C[MCP Server 1]
-    B <-->|JSON-RPC 2.0| D[MCP Server 2]
-    B <-->|JSON-RPC 2.0| E[MCP Server 3]
+        S1[Server 1<br>Files & Git]
+        S2[Server 2<br>Database]
+        S3[Server 3<br>External APIs]
+        
+        C1 <-->|JSON-RPC 2.0| S1
+        C2 <-->|JSON-RPC 2.0| S2
+        C3 <-->|JSON-RPC 2.0| S3
     end
-    
+
     subgraph "Service Layer"
-    C --> F[GitHub API]
-    D --> G[File System]
-    E --> H[Database]
+        R1[("Local<br>Resource A")]
+        R2[("Local<br>Resource B")]
+        R3[("Remote<br>Resource C")]
+        
+        S1 <--> R1
+        S2 <--> R2
+        S3 <--> R3
     end
     
     subgraph "Transport Options"
@@ -106,30 +124,120 @@ graph LR
     J[HTTP/SSE<br/>Remote]
     end
     
-    B -.->|Uses| I
-    B -.->|Uses| J
+    C1 -.->|Uses| I
+    C3 -.->|Uses| J
     
-    style A fill:#f9d5e5,stroke:#333,stroke-width:1px
-    style B fill:#d5e5f9,stroke:#333,stroke-width:1px
-    style C fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style D fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style E fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style H fill:#f9d5e5,stroke:#333,stroke-width:1px
+    style C1 fill:#d5e5f9,stroke:#333,stroke-width:1px
+    style C2 fill:#d5e5f9,stroke:#333,stroke-width:1px
+    style C3 fill:#d5e5f9,stroke:#333,stroke-width:1px
+    style S1 fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style S2 fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style S3 fill:#d5f9e5,stroke:#333,stroke-width:1px
     style I fill:#fff2cc,stroke:#333,stroke-width:1px
     style J fill:#fff2cc,stroke:#333,stroke-width:1px
 ```
 
-## Communication in MCP: JSON-RPC 2.0
+### Core Components in Detail
+
+#### Host
+
+The host process acts as the container and coordinator:
+
+* Creates and manages multiple client instances
+* Controls client connection permissions and lifecycle
+* Enforces security policies and consent requirements
+* Handles user authorization decisions
+* Coordinates AI/LLM integration
+* Manages context aggregation across clients
+
+#### Clients
+
+Each client is created by the host and maintains an isolated server connection:
+
+* Establishes one stateful session per server
+* Handles protocol negotiation and capability exchange
+* Routes protocol messages bidirectionally
+* Manages subscriptions and notifications
+* Maintains security boundaries between servers
+
+A host application creates and manages multiple clients, with each client having a 1:1 relationship with a particular server.
+
+#### Servers
+
+Servers provide specialized context and capabilities:
+
+* Expose resources, tools and prompts via MCP primitives
+* Operate independently with focused responsibilities
+* Request sampling through client interfaces
+* Must respect security constraints
+* Can be local processes or remote services
+
+### Design Principles
+
+MCP is built on several key design principles that shape its architecture:
+
+1. **Servers should be extremely easy to build**
+   * Host applications handle complex orchestration responsibilities
+   * Servers focus on specific, well-defined capabilities
+   * Simple interfaces minimize implementation overhead
+   * Clear separation enables maintainable code
+
+2. **Servers should be highly composable**
+   * Each server provides focused functionality in isolation
+   * Multiple servers can be combined seamlessly
+   * Shared protocol enables interoperability
+   * Modular design supports extensibility
+
+3. **Servers should not be able to read the whole conversation, nor "see into" other servers**
+   * Servers receive only necessary contextual information
+   * Full conversation history stays with the host
+   * Each server connection maintains isolation
+   * Cross-server interactions are controlled by the host
+   * Host process enforces security boundaries
+
+4. **Features can be added to servers and clients progressively**
+   * Core protocol provides minimal required functionality
+   * Additional capabilities can be negotiated as needed
+   * Servers and clients evolve independently
+   * Protocol designed for future extensibility
+   * Backwards compatibility is maintained
+
+## Communication Protocol: JSON-RPC 2.0
 
 MCP uses **JSON-RPC 2.0** as its communication protocol. Think of JSON-RPC 2.0 as the "language" that all MCP participants speak - it's simple, lightweight, and works everywhere.
 
-### Why JSON-RPC 2.0?
+### Data and Transport Layers
 
-MCP chose JSON-RPC 2.0 because it's:
-- **Transport-agnostic**: Works over stdio, HTTP, WebSocket, etc.
-- **Stateless and lightweight**: No complex state management
-- **Human-readable**: Easy to debug and understand
-- **Language-agnostic**: Works with any programming language
-- **Standardized**: Based on an existing, proven specification
+MCP has two communication layers:
+
+1. **Data Layer**: Defines the message format (JSON-RPC 2.0)
+2. **Transport Layer**: Handles how messages are sent
+
+```mermaid
+graph TD
+    subgraph "Data Layer"
+    A[JSON-RPC 2.0 Messages]
+    end
+    
+    subgraph "Transport Layer"
+    B[Local Stdio]
+    C[Remote HTTP]
+    end
+    
+    A --- B
+    A --- C
+    
+    style A fill:#d5e5f9,stroke:#333,stroke-width:1px
+    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
+    style C fill:#d5f9e5,stroke:#333,stroke-width:1px
+```
+
+#### The Mail Analogy
+
+MCP's layers are like sending a letter:
+- The **Data Layer** is like the letter's content and format (written in English, with greeting and signature)
+- The **Transport Layer** is like the delivery method (hand delivery or postal service)
 
 ### JSON-RPC 2.0 Message Types
 
@@ -187,38 +295,6 @@ graph TD
     style F fill:#e6ccff,stroke:#333,stroke-width:1px
 ```
 
-### Data and Transport Layers
-
-MCP has two layers:
-
-1. **Data Layer**: Defines the message format (JSON-RPC 2.0)
-2. **Transport Layer**: Handles how messages are sent
-
-```mermaid
-graph TD
-    subgraph "Data Layer"
-    A[JSON-RPC 2.0 Messages]
-    end
-    
-    subgraph "Transport Layer"
-    B[Local Stdio]
-    C[Remote HTTP]
-    end
-    
-    A --- B
-    A --- C
-    
-    style A fill:#d5e5f9,stroke:#333,stroke-width:1px
-    style B fill:#d5f9e5,stroke:#333,stroke-width:1px
-    style C fill:#d5f9e5,stroke:#333,stroke-width:1px
-```
-
-#### The Mail Analogy
-
-MCP's layers are like sending a letter:
-- The **Data Layer** is like the letter's content and format (written in English, with greeting and signature)
-- The **Transport Layer** is like the delivery method (hand delivery or postal service)
-
 ## Building Blocks: The Three Primitives
 
 MCP servers provide three types of capabilities:
@@ -254,19 +330,22 @@ MCP servers are like libraries:
 - **Tools** are like services the library offers (search catalog, reserve books)
 - **Prompts** are like the reference librarian who helps you format your questions properly
 
-## Complete MCP Interaction Flow
+## MCP in Action: Complete Interaction Flow
 
-Here's how a complete MCP session works from connection to shutdown using JSON-RPC 2.0:
+### Capability Negotiation & Lifecycle
+
+MCP uses a capability-based negotiation system where clients and servers explicitly declare their supported features during initialization. The full session includes initialization, normal operations, and clean shutdown:
 
 ```mermaid
 sequenceDiagram
     participant H as Host
-    participant C as MCP Client
-    participant S as MCP Server
-    
+    participant C as Client
+    participant S as Server
+
     Note over H,S: 1. Connection & Initialization
-    C->>S: initialize (with client capabilities)
-    S->>C: Response (with server capabilities)
+    H->>+C: Initialize client
+    C->>+S: Initialize session with capabilities
+    S-->>C: Respond with supported capabilities
     C->>S: initialized (notification)
     
     Note over H,S: 2. Discovery Phase
@@ -291,25 +370,20 @@ sequenceDiagram
     C->>H: Document content
     
     Note over H,S: 4. Notifications (Optional)
-    S->>C: resources/updated (JSON-RPC Notification)
-    C->>H: "Resource has changed"
+    S--)C: resources/updated (JSON-RPC Notification)
+    C--)H: "Resource has changed"
     
     Note over H,S: 5. Clean Shutdown
+    H->>C: Terminate
     C->>S: shutdown (JSON-RPC Request)
     S->>C: shutdown response
     Note over S: Server exits gracefully
 ```
 
-### Connection Lifecycle
-
-The complete MCP interaction flow shown above includes these key phases:
-
-1. **Initialization**: Client and server exchange capabilities during handshake
-2. **Discovery**: Client learns what tools and resources are available
-3. **Normal Operations**: Tools are called, resources are read, notifications sent
-4. **Shutdown**: Clean termination when the session ends
-
-This standardized lifecycle ensures reliable communication and proper resource management.
+Each capability unlocks specific protocol features. For example:
+- Tool invocation requires the server to declare tool capabilities
+- Resource subscriptions require the server to declare subscription support
+- Sampling requires the client to declare support in its capabilities
 
 ## Real MCP Message Examples
 
@@ -434,7 +508,7 @@ When something goes wrong, servers return error responses:
 }
 ```
 
-### The Protocol Benefits
+### Protocol Benefits
 
 Using JSON-RPC 2.0 gives MCP several advantages:
 
@@ -444,8 +518,6 @@ Using JSON-RPC 2.0 gives MCP several advantages:
 4. **Extensibility**: Easy to add new methods without breaking compatibility
 5. **Debugging**: Human-readable messages for easy troubleshooting
 
-This structured approach makes MCP both powerful and accessible - developers can quickly understand what any MCP server offers and how to use it.
-
 ## Security and User Control
 
 MCP is designed with security in mind:
@@ -453,6 +525,8 @@ MCP is designed with security in mind:
 1. Tool execution typically requires user approval
 2. Servers can implement authentication (OAuth, API keys)
 3. Hosts can limit which servers they connect to
+4. Servers only receive necessary contextual information
+5. Cross-server interactions are controlled by the host
 
 ```mermaid
 graph LR
@@ -491,9 +565,17 @@ Just as web standards like HTTP and REST enabled the explosive growth of web app
 
 ## References
 
+### Official Documentation
 1. [Introduction - Model Context Protocol](https://modelcontextprotocol.io/docs/getting-started/intro)
 2. [Architecture Overview - Model Context Protocol](https://modelcontextprotocol.io/docs/learn/architecture)
-3. [Introducing the Model Context Protocol \ Anthropic](https://www.anthropic.com/news/model-context-protocol)
-4. [Server Concepts - Model Context Protocol](https://modelcontextprotocol.io/docs/learn/server-concepts)
-5. [Model Context Protocol (MCP): Landscape, Security Threats, and Future Research Directions](https://arxiv.org/abs/2503.23278)
-6. [Model Context Protocol (MCP) at First Glance: Studying the Security and Maintainability of MCP Servers](https://arxiv.org/abs/2506.13538)
+3. [Server Concepts - Model Context Protocol](https://modelcontextprotocol.io/docs/learn/server-concepts)
+4. [Client Implementation - Model Context Protocol](https://modelcontextprotocol.io/docs/learn/client-implementation)
+5. [MCP Specification - Model Context Protocol](https://modelcontextprotocol.io/specification/2025-06-18/overview)
+
+### Official Announcements
+6. [Introducing the Model Context Protocol \ Anthropic](https://www.anthropic.com/news/model-context-protocol)
+7. [Model Context Protocol - Overview](http://modelcontextprotocol.io/overview)
+
+### Research Papers
+8. [Model Context Protocol (MCP): Landscape, Security Threats, and Future Research Directions](https://arxiv.org/abs/2503.23278)
+9. [Model Context Protocol (MCP) at First Glance: Studying the Security and Maintainability of MCP Servers](https://arxiv.org/abs/2506.13538)
