@@ -32,9 +32,15 @@ MCP uses a client-host-server architecture where each host can run multiple clie
 
 MCP has three main participants:
 
-1. **Host**: The AI application (like Claude or a coding assistant: VS Code or Cursor)
-2. **Client**: The connector that sends requests from the AI-host to servers
-3. **Server**: The program that provides data or tools to the AI.
+1. **Host**: 
+- The AI application (like Claude or a coding assistant: VS Code or Cursor)
+- Manages client instances (1:1 with servers), controls permissions/authorization, and coordinates AI/LLM integration with context aggregation
+2. **Client**: 
+- The connector that sends requests from the AI-host to servers
+- Handles stateful sessions, protocol negotiation, bidirectional routing, and maintains security boundaries between servers
+3. **Server**:
+- The program that provides data or tools to the AI.
+- Expose MCP primitives (resources, tools, prompts) independently while respecting security constraints as local or remote services
 
 ```mermaid
 graph LR
@@ -60,7 +66,8 @@ Think of MCP as a restaurant service:
 
 At a high level, MCP has three primary layers:
 
-1. **Host Layer**: Contains the AI model and user interface
+1. **Host Layer**: 
+    Contains the AI model and user interface
 2. **MCP Layer**: Clients and servers that handle requests and responses
 3. **Service Layer**: External systems (GitHub, file systems, databases, etc.)
 
@@ -128,20 +135,6 @@ graph TB
     style T1 fill:#fff2cc,stroke:#333,stroke-width:1px
     style T2 fill:#fff2cc,stroke:#333,stroke-width:1px
 ```
-
-### Core Components in Detail
-
-#### Host
-
-Manages client instances (1:1 with servers), controls permissions/authorization, and coordinates AI/LLM integration with context aggregation
-
-#### Clients
-
-Handles stateful sessions, protocol negotiation, bidirectional routing, and maintains security boundaries between servers
-
-#### Servers
-
-Expose MCP primitives (resources, tools, prompts) independently while respecting security constraints as local or remote services
 
 ### Design Principles
 
