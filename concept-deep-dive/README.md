@@ -24,29 +24,6 @@ graph LR
 
 Just like USB-C provides a single port that connects your laptop to many different devices (monitors, hard drives, chargers), MCP is a single protocol that connects AI models to many different data sources and tools. Before USB-C, we needed different ports for different devices. Similarly, before MCP, developers had to create custom integrations for each data source an AI needed to access.
 
-## Why MCP Matters
-
-Traditional AI models are limited to the data they were trained on. They're like experts locked in soundproof rooms - knowledgeable but isolated. MCP breaks down these walls, allowing AI to:
-
-1. Access real-time information
-2. Use specialized tools
-3. Interact with your personal data (with permission)
-
-```mermaid
-graph TD
-    A[Traditional AI] -->|Limited to<br/>training data| B[Static Knowledge]
-    C[MCP-enabled AI] -->|Can access<br/>external data| D[Dynamic Knowledge]
-    C -->|Can use tools| E[Action Capabilities]
-    C -->|Can see your data<br/>with permission| F[Personalization]
-    
-    style A fill:#ffcccc,stroke:#333,stroke-width:1px
-    style B fill:#eeeeee,stroke:#333,stroke-width:1px
-    style C fill:#ccffcc,stroke:#333,stroke-width:1px
-    style D fill:#eeeeee,stroke:#333,stroke-width:1px
-    style E fill:#eeeeee,stroke:#333,stroke-width:1px
-    style F fill:#eeeeee,stroke:#333,stroke-width:1px
-```
-
 ## Core Architecture
 
 MCP uses a client-host-server architecture where each host can run multiple client instances. This architecture enables integration of AI capabilities across applications while maintaining clear security boundaries.
@@ -55,9 +32,9 @@ MCP uses a client-host-server architecture where each host can run multiple clie
 
 MCP has three main participants:
 
-1. **Host**: The AI application (like Claude or a coding assistant)
-2. **Client**: The connector that sends requests from the host to servers
-3. **Server**: The program that provides data or tools to the AI
+1. **Host**: The AI application (like Claude or a coding assistant: VS Code or Cursor)
+2. **Client**: The connector that sends requests from the AI-host to servers
+3. **Server**: The program that provides data or tools to the AI.
 
 ```mermaid
 graph LR
@@ -156,66 +133,40 @@ graph TB
 
 #### Host
 
-The host process acts as the container and coordinator:
+The host process acts as the coordinator:
 
-* Creates and manages multiple client instances
-* Controls client connection permissions and lifecycle
-* Enforces security policies and consent requirements
-* Handles user authorization decisions
-* Coordinates AI/LLM integration
-* Manages context aggregation across clients
+* Manages client instances (1:1 with servers), controls permissions/authorization, and coordinates AI/LLM integration with context aggregation
 
 #### Clients
 
 Each client is created by the host and maintains an isolated server connection:
 
-* Establishes one stateful session per server
-* Handles protocol negotiation and capability exchange
-* Routes protocol messages bidirectionally
-* Manages subscriptions and notifications
-* Maintains security boundaries between servers
-
-A host application creates and manages multiple clients, with each client having a 1:1 relationship with a particular server.
+* Handles stateful sessions, protocol negotiation, bidirectional routing, and maintains security boundaries between servers
 
 #### Servers
 
 Servers provide specialized context and capabilities:
 
-* Expose resources, tools and prompts via MCP primitives
-* Operate independently with focused responsibilities
-* Request sampling through client interfaces
-* Must respect security constraints
-* Can be local processes or remote services
+* Expose MCP primitives (resources, tools, prompts) independently while respecting security constraints as local or remote services
 
 ### Design Principles
 
 MCP is built on several key design principles that shape its architecture:
 
-1. **Servers should be extremely easy to build**
-   * Host applications handle complex orchestration responsibilities
-   * Servers focus on specific, well-defined capabilities
-   * Simple interfaces minimize implementation overhead
-   * Clear separation enables maintainable code
+1. **Simple Server Development**
+   * Hosts handle complex orchestration while servers focus on specific capabilities with minimal implementation overhead
 
-2. **Servers should be highly composable**
-   * Each server provides focused functionality in isolation
-   * Multiple servers can be combined seamlessly
-   * Shared protocol enables interoperability
-   * Modular design supports extensibility
+2. **High Composability**
+   * Servers provide isolated functionality that can be seamlessly combined through shared protocol standards
 
-3. **Servers should not be able to read the whole conversation, nor "see into" other servers**
-   * Servers receive only necessary contextual information
-   * Full conversation history stays with the host
-   * Each server connection maintains isolation
-   * Cross-server interactions are controlled by the host
-   * Host process enforces security boundaries
+3. **Security Isolation**
+   * Servers receive only necessary context and cannot access full conversations or other servers' data
 
-4. **Features can be added to servers and clients progressively**
-   * Core protocol provides minimal required functionality
-   * Additional capabilities can be negotiated as needed
-   * Servers and clients evolve independently
-   * Protocol designed for future extensibility
-   * Backwards compatibility is maintained
+4. **Progressive Enhancement**
+   * Core protocol supports minimal functionality with optional capabilities negotiated as needed
+
+5. **Independent Evolution**
+   * Servers and clients can evolve separately while maintaining backwards compatibility and extensibility
 
 ## Communication Protocol: JSON-RPC 2.0
 
@@ -252,6 +203,41 @@ graph TD
 MCP's layers are like sending a letter:
 - The **Data Layer** is like the letter's content and format (written in English, with greeting and signature)
 - The **Transport Layer** is like the delivery method (hand delivery or postal service)
+
+## Building Blocks: The Three Primitives
+
+MCP servers provide three types of capabilities:
+
+1. **Resources**: Read-only data (files, emails, messages)
+2. **Tools**: Functions the AI can call to perform actions
+3. **Prompts**: Templates to guide the AI's responses
+
+```mermaid
+graph TD
+    A[MCP Server] --> B[Resources<br/>Read-only Data]
+    A --> C[Tools<br/>Action Functions]
+    A --> D[Prompts<br/>Response Templates]
+    
+    B --> B1[Files]
+    B --> B2[Database Records]
+    B --> B3[Messages]
+    
+    C --> C1[Search]
+    C --> C2[Create]
+    C --> C3[Update]
+    
+    style A fill:#d5f9e5,stroke:#333,stroke-width:2px
+    style B fill:#d5e5f9,stroke:#333,stroke-width:1px
+    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
+    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
+```
+
+### The Library Analogy
+
+MCP servers are like libraries:
+- **Resources** are like books you can read but not modify
+- **Tools** are like services the library offers (search catalog, reserve books)
+- **Prompts** are like the reference librarian who helps you format your questions properly
 
 ### JSON-RPC 2.0 Message Types
 
@@ -309,41 +295,6 @@ graph TD
     style F fill:#e6ccff,stroke:#333,stroke-width:1px
 ```
 
-## Building Blocks: The Three Primitives
-
-MCP servers provide three types of capabilities:
-
-1. **Resources**: Read-only data (files, emails, messages)
-2. **Tools**: Functions the AI can call to perform actions
-3. **Prompts**: Templates to guide the AI's responses
-
-```mermaid
-graph TD
-    A[MCP Server] --> B[Resources<br/>Read-only Data]
-    A --> C[Tools<br/>Action Functions]
-    A --> D[Prompts<br/>Response Templates]
-    
-    B --> B1[Files]
-    B --> B2[Database Records]
-    B --> B3[Messages]
-    
-    C --> C1[Search]
-    C --> C2[Create]
-    C --> C3[Update]
-    
-    style A fill:#d5f9e5,stroke:#333,stroke-width:2px
-    style B fill:#d5e5f9,stroke:#333,stroke-width:1px
-    style C fill:#f9d5e5,stroke:#333,stroke-width:1px
-    style D fill:#f9f9d5,stroke:#333,stroke-width:1px
-```
-
-### The Library Analogy
-
-MCP servers are like libraries:
-- **Resources** are like books you can read but not modify
-- **Tools** are like services the library offers (search catalog, reserve books)
-- **Prompts** are like the reference librarian who helps you format your questions properly
-
 ## MCP in Action: Complete Interaction Flow
 
 ### Capability Negotiation & Lifecycle
@@ -357,42 +308,43 @@ sequenceDiagram
     participant S as Server
 
     Note over H,S: 1. Connection & Initialization
-    H->>+C: Initialize client
-    C->>+S: Initialize session with capabilities
-    S-->>C: Respond with supported capabilities
-    C->>S: initialized (notification)
+    H->>+C: Initialize client<br/>Example: "Connect to file server"
+    C->>+S: Initialize session with capabilities<br/>{"jsonrpc":"2.0","method":"initialize","params":{"capabilities":{"tools":{}}}}
+    S-->>C: Respond with supported capabilities<br/>{"result":{"capabilities":{"tools":{},"resources":{}}}}
+    C->>S: initialized (notification)<br/>{"jsonrpc":"2.0","method":"initialized"}
     
     Note over H,S: 2. Discovery Phase
-    H->>C: "What can this server do?"
-    C->>S: tools/list (JSON-RPC Request)
-    S->>C: Available tools (JSON-RPC Response)
-    C->>S: resources/list (JSON-RPC Request)
-    S->>C: Available resources (JSON-RPC Response)
-    C->>H: Server capabilities
+    H->>C: "What can this server do?"<br/>Example: User asks AI to explore capabilities
+    C->>S: tools/list (JSON-RPC Request)<br/>{"jsonrpc":"2.0","id":1,"method":"tools/list"}
+    S->>C: Available tools (JSON-RPC Response)<br/>{"result":{"tools":[{"name":"searchFiles","description":"Search files by name"}]}}
+    C->>S: resources/list (JSON-RPC Request)<br/>{"jsonrpc":"2.0","id":2,"method":"resources/list"}
+    S->>C: Available resources (JSON-RPC Response)<br/>{"result":{"resources":[{"uri":"file:///docs/","name":"Documentation"}]}}
+    C->>H: Server capabilities<br/>"Found: searchFiles tool, /docs/ resource"
     
     Note over H,S: 3. Normal Operations
-    H->>C: "Use searchFiles tool"
-    C->>S: tools/call (JSON-RPC Request)
-    Note over S: Execute tool
-    S->>C: Tool results (JSON-RPC Response)
-    C->>H: Results
+    H->>C: "Use searchFiles tool"<br/>Example: "Find all Python files"
+    C->>S: tools/call (JSON-RPC Request)<br/>{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"searchFiles","arguments":{"pattern":"*.py"}}}
+    Note over S: Execute tool<br/>Search filesystem for *.py files
+    S->>C: Tool results (JSON-RPC Response)<br/>{"result":{"content":[{"type":"text","text":"Found: app.py, utils.py, test.py"}]}}
+    C->>H: Results<br/>"Found 3 Python files: app.py, utils.py, test.py"
     
-    H->>C: "Read that document"
-    C->>S: resources/read (JSON-RPC Request)
-    Note over S: Fetch resource
-    S->>C: Resource content (JSON-RPC Response)
-    C->>H: Document content
+    H->>C: "Read that document"<br/>Example: "Show me the README file"
+    C->>S: resources/read (JSON-RPC Request)<br/>{"jsonrpc":"2.0","id":4,"method":"resources/read","params":{"uri":"file:///README.md"}}
+    Note over S: Fetch resource<br/>Read file from filesystem
+    S->>C: Resource content (JSON-RPC Response)<br/>{"result":{"contents":[{"uri":"file:///README.md","text":"# My Project\nThis is a sample project..."}]}}
+    C->>H: Document content<br/>"# My Project\nThis is a sample project..."
     
     Note over H,S: 4. Notifications (Optional)
-    S--)C: resources/updated (JSON-RPC Notification)
-    C--)H: "Resource has changed"
+    S--)C: resources/updated (JSON-RPC Notification)<br/>{"jsonrpc":"2.0","method":"resources/updated","params":{"uri":"file:///README.md"}}
+    C--)H: "Resource has changed"<br/>"README.md was just updated"
     
     Note over H,S: 5. Clean Shutdown
-    H->>C: Terminate
-    C->>S: shutdown (JSON-RPC Request)
-    S->>C: shutdown response
-    Note over S: Server exits gracefully
+    H->>C: Terminate<br/>Example: User closes application
+    C->>S: shutdown (JSON-RPC Request)<br/>{"jsonrpc":"2.0","id":5,"method":"shutdown"}
+    S->>C: shutdown response<br/>{"jsonrpc":"2.0","id":5,"result":{}}
+    Note over S: Server exits gracefully<br/>Clean up resources and exit
 ```
+
 
 Each capability unlocks specific protocol features. For example:
 - Tool invocation requires the server to declare tool capabilities
@@ -402,6 +354,8 @@ Each capability unlocks specific protocol features. For example:
 ## Real MCP Message Examples
 
 ### 1. Tool Discovery
+
+**Scenario**: User asks AI "What can this file server do?" and the AI needs to discover available tools.
 
 **Request** (Client asks server for available tools):
 ```json
@@ -421,16 +375,35 @@ Each capability unlocks specific protocol features. For example:
   "result": {
     "tools": [
       {
-        "name": "searchFlights",
-        "description": "Find flights between two airports",
+        "name": "searchFiles",
+        "description": "Search for files by name pattern in the current directory",
         "inputSchema": {
           "type": "object",
           "properties": {
-            "origin": { "type": "string" },
-            "destination": { "type": "string" },
-            "date": { "type": "string", "format": "date" }
+            "pattern": { 
+              "type": "string",
+              "description": "File pattern to search for (e.g., '*.py', 'README.*')"
+            },
+            "directory": { 
+              "type": "string",
+              "description": "Directory to search in (optional, defaults to current dir)"
+            }
           },
-          "required": ["origin", "destination", "date"]
+          "required": ["pattern"]
+        }
+      },
+      {
+        "name": "readFile",
+        "description": "Read the contents of a specific file",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": { 
+              "type": "string",
+              "description": "Path to the file to read"
+            }
+          },
+          "required": ["path"]
         }
       }
     ]
@@ -440,6 +413,8 @@ Each capability unlocks specific protocol features. For example:
 
 ### 2. Tool Execution
 
+**Scenario**: User asks "Find all Python files in my project" and the AI uses the searchFiles tool.
+
 **Request** (Client calls a tool):
 ```json
 {
@@ -447,11 +422,10 @@ Each capability unlocks specific protocol features. For example:
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "searchFlights",
+    "name": "searchFiles",
     "arguments": {
-      "origin": "SFO",
-      "destination": "LAX",
-      "date": "2025-09-10"
+      "pattern": "*.py",
+      "directory": "/Users/john/my-project"
     }
   }
 }
@@ -466,7 +440,7 @@ Each capability unlocks specific protocol features. For example:
     "content": [
       {
         "type": "text",
-        "text": "Found 3 flights:\n- UA123 at 08:00 ($120)\n- DL456 at 09:15 ($135)\n- AA789 at 10:30 ($115)"
+        "text": "Found 5 Python files:\n- /Users/john/my-project/app.py\n- /Users/john/my-project/utils.py\n- /Users/john/my-project/models/user.py\n- /Users/john/my-project/tests/test_app.py\n- /Users/john/my-project/scripts/setup.py"
       }
     ]
   }
@@ -475,6 +449,8 @@ Each capability unlocks specific protocol features. For example:
 
 ### 3. Resource Reading
 
+**Scenario**: User asks "Show me the README file" and the AI reads the resource.
+
 **Request** (Client reads a resource):
 ```json
 {
@@ -482,7 +458,7 @@ Each capability unlocks specific protocol features. For example:
   "id": 3,
   "method": "resources/read",
   "params": { 
-    "uri": "file:///Documents/report.txt" 
+    "uri": "file:///Users/john/my-project/README.md" 
   }
 }
 ```
@@ -495,32 +471,111 @@ Each capability unlocks specific protocol features. For example:
   "result": {
     "contents": [
       {
-        "uri": "file:///Documents/report.txt",
-        "mimeType": "text/plain",
-        "text": "Q3 Financial Report\n==================\nRevenue increased by 15%..."
+        "uri": "file:///Users/john/my-project/README.md",
+        "mimeType": "text/markdown",
+        "text": "# My Awesome Project\n\nThis is a sample Python project that demonstrates MCP integration.\n\n## Features\n- File searching\n- Content reading\n- Real-time updates\n\n## Installation\n```bash\npip install -r requirements.txt\n```\n\n## Usage\nRun the main application:\n```bash\npython app.py\n```"
       }
     ]
   }
 }
 ```
 
-### 4. Error Handling
+### 4. Initialization Example
 
-When something goes wrong, servers return error responses:
+**Scenario**: When the AI application starts up and connects to a file server.
 
+**Request** (Client initializes connection):
 ```json
 {
   "jsonrpc": "2.0",
-  "id": 2,
-  "error": {
-    "code": -32602,
-    "message": "Invalid params",
-    "data": {
-      "details": "Missing required parameter: origin"
+  "id": 0,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {},
+      "resources": {}
+    },
+    "clientInfo": {
+      "name": "Claude Desktop",
+      "version": "1.0.0"
     }
   }
 }
 ```
+
+**Response** (Server responds with its capabilities):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {},
+      "resources": {
+        "subscribe": true,
+        "listChanged": true
+      }
+    },
+    "serverInfo": {
+      "name": "file-server",
+      "version": "1.2.0"
+    }
+  }
+}
+```
+
+### 5. Error Handling
+
+**Scenario**: User asks to search files but provides invalid parameters.
+
+**Request** (Client makes invalid request):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "searchFiles",
+    "arguments": {
+      "directory": "/invalid/path"
+    }
+  }
+}
+```
+
+**Response** (Server returns error):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "error": {
+    "code": -32602,
+    "message": "Invalid params",
+    "data": {
+      "details": "Missing required parameter: pattern"
+    }
+  }
+}
+```
+
+### 6. Notification Example
+
+**Scenario**: A file is modified while the AI is working, and the server notifies the client.
+
+**Notification** (Server sends update notification):
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/updated",
+  "params": {
+    "uri": "file:///Users/john/my-project/README.md"
+  }
+}
+```
+
+*Note: Notifications don't have an `id` field because they don't expect a response.*
 
 ### Protocol Benefits
 
