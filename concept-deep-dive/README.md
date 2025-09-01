@@ -133,21 +133,15 @@ graph TB
 
 #### Host
 
-The host process acts as the coordinator:
-
-* Manages client instances (1:1 with servers), controls permissions/authorization, and coordinates AI/LLM integration with context aggregation
+Manages client instances (1:1 with servers), controls permissions/authorization, and coordinates AI/LLM integration with context aggregation
 
 #### Clients
 
-Each client is created by the host and maintains an isolated server connection:
-
-* Handles stateful sessions, protocol negotiation, bidirectional routing, and maintains security boundaries between servers
+Handles stateful sessions, protocol negotiation, bidirectional routing, and maintains security boundaries between servers
 
 #### Servers
 
-Servers provide specialized context and capabilities:
-
-* Expose MCP primitives (resources, tools, prompts) independently while respecting security constraints as local or remote services
+Expose MCP primitives (resources, tools, prompts) independently while respecting security constraints as local or remote services
 
 ### Design Principles
 
