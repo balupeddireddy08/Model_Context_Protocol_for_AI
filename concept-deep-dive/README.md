@@ -33,14 +33,14 @@ MCP uses a client-host-server architecture where each host can run multiple clie
 MCP has three main participants:
 
 1. **Host**: 
-  - The **AI application** (like Claude or a coding assistant: VS Code or Cursor)
-  - Manages client instances (**1:1 with servers**), controls permissions/authorization, and **coordinates AI/LLM integration with context aggregation**
+  * The **AI application** (like Claude or a coding assistant: VS Code or Cursor)
+  * Manages client instances (**1:1 with servers**), controls permissions/authorization, and **coordinates AI/LLM integration with context aggregation**
 2. **Client**: 
-  - The connector that sends requests from the AI-host to servers
-  - Handles stateful sessions, protocol negotiation, bidirectional routing, and maintains security boundaries between servers
+  * The connector that sends requests from the AI-host to servers
+  * Handles stateful sessions, protocol negotiation, bidirectional routing, and maintains security boundaries between servers
 3. **Server**:
-  - The program that provides data or tools to the AI.
-  - Expose **MCP primitives (resources, tools, prompts)** independently while respecting security constraints as local or remote services
+  * The program that provides data or tools to the AI.
+  * Expose **MCP primitives (resources, tools, prompts)** independently while respecting security constraints as local or remote services
 
 ```mermaid
 graph LR
@@ -140,20 +140,13 @@ graph TB
 
 MCP is built on several key design principles that shape its architecture:
 
-1. **Simple Server Development**
-   * Hosts handle complex orchestration while servers focus on specific capabilities with minimal implementation overhead
-
-2. **High Composability**
-   * Servers provide isolated functionality that can be seamlessly combined through shared protocol standards
-
-3. **Security Isolation**
-   * Servers receive only necessary context and cannot access full conversations or other servers' data
-
-4. **Progressive Enhancement**
-   * Core protocol supports minimal functionality with optional capabilities negotiated as needed
-
-5. **Independent Evolution**
-   * Servers and clients can evolve separately while maintaining backwards compatibility and extensibility
+| Principle | Description |
+|-----------|-------------|
+| **Simple Server Development** | Hosts handle complex orchestration while servers focus on specific capabilities with minimal implementation overhead |
+| **High Composability** | Servers provide isolated functionality that can be seamlessly combined through shared protocol standards |
+| **Security Isolation** | Servers receive only necessary context and cannot access full conversations or other servers' data |
+| **Progressive Enhancement** | Core protocol supports minimal functionality with optional capabilities negotiated as needed |
+| **Independent Evolution** | Servers and clients can evolve separately while maintaining backwards compatibility and extensibility |
 
 ## Communication Protocol: JSON-RPC 2.0
 
