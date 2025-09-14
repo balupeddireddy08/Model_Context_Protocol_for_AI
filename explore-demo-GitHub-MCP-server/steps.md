@@ -48,6 +48,12 @@ This document provides a complete, step-by-step guide for demonstrating the capa
 - [Cross-Repo PR](#4-open-a-pr-from-fork--upstream)
 - [Merge Process](#d--merge-flow--maintainers)
 
+### [🧰 Additional GitHub MCP Tools Reference](#-additional-github-mcp-tools-reference)
+- [Code & Content Access](#code--content-access)
+- [Advanced Search & Discovery](#advanced-search--discovery)
+- [Pull Request Management](#pull-request-management)
+- [User & Notification Controls](#user--notification-controls)
+
 ---
 
 # Stage 1 — VS Code + GitHub MCP Server
@@ -2042,6 +2048,41 @@ If you are not a maintainer, you cannot merge the PR yourself. Instead:
 ---
 
 [⬆️ Back to Table of Contents](#table-of-contents) | [⏪ Previous: Stage 5](#stage-5--security--code-insights)
+
+---
+
+# 🧰 Additional GitHub MCP Tools Reference
+
+Beyond the tools demonstrated in this guide, the GitHub MCP Server offers many more capabilities to enhance your development workflow. Here's a quick reference to additional tools you might find useful:
+
+## Code & Content Access
+
+- **get_file_contents**: View file content without cloning the repo
+- **get_commit**: Get detailed commit information with diffs, message, and metadata
+- **list_commits**: View commit history on a branch
+- **list_tags**: List release tags and version information
+- **push_files**: Push multiple files in a single atomic commit
+
+## Advanced Search & Discovery
+
+- **search_issues**: Find issues by title, body, status, assignee, etc.
+- **search_repositories**: Discover repos by language, topic, stars, etc.
+- **search_users**: Find users by username, organization, or contribution activity
+
+## Pull Request Management
+
+- **get_pull_request_status**: Check CI/CD status of PRs
+- **get_pull_request_comments**: Get all comments on a PR
+- **add_pull_request_review_comment_to_pending_review**: Add specific line comments
+- **create_pending_pull_request_review** / **submit_pending_pull_request_review**: Create multi-step reviews
+
+## User & Notification Controls
+
+- **get_me**: Get details about the authenticated user
+- **get_notification_details**: Get details about a specific notification
+- **manage_notification_subscription**: Control notification settings at granular levels
+
+These tools provide additional automation capabilities when working with GitHub repositories, enabling even more sophisticated workflows through Copilot Chat's Agent mode.
 
 ---
 
