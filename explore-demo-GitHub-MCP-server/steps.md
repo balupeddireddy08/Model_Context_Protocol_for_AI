@@ -250,12 +250,34 @@ What to expect:
 
 ### 2) Create (local) `main` branch and add files (local-first)
 
-Do this locally in VS Code (no MCP tool needed):
+Do this locally (no MCP tool needed):
 
+**VS Code UI Method:**
 1. Create the files shown above in your workspace.
 2. Open the Source Control view → Initialize Repository (if needed).
 3. Stage all, enter a commit message (e.g., "Initial Streamlit app (Stage 1)") → Commit.
 4. Publish/Push the `main` branch to the GitHub repo created in step 1 (set the remote if prompted).
+
+**Git CLI Method:**
+```bash
+# Initialize the repository
+git init
+
+# Create files as shown in the examples above
+# (manually create app.py, requirements.txt, .gitignore, README.md)
+
+# Stage all files
+git add -A
+
+# Commit the files
+git commit -m "Initial Streamlit app (Stage 1)"
+
+# Set remote (replace USERNAME with your GitHub username)
+git remote add origin https://github.com/USERNAME/demo-streamlit.git
+
+# Push to GitHub (create main branch)
+git push -u origin main
+```
 
 Note: You can optionally have the Agent create/update files remotely (see step 5), but always pull locally afterward to keep local and remote identical.
 
@@ -331,7 +353,20 @@ Visual steps:
 
 ### 6) Push local commits to GitHub (local-first)
 
-Use VS Code Source Control to Push (or Publish Branch) your local commits to `main`. No MCP tool is required for this step. Use `list_branches` to confirm branches if needed.
+**VS Code UI Method:**
+Use VS Code Source Control to Push (or Publish Branch) your local commits to `main`. 
+
+**Git CLI Method:**
+```bash
+# Push your changes to GitHub
+git push origin main
+
+# If you want to verify branches
+git branch -a  # Lists all local and remote branches
+git branch -r  # Lists only remote branches
+```
+
+No MCP tool is required for this step. You can optionally use `list_branches` MCP tool to confirm branches if needed.
 
 ### 7) List branches again to confirm (`list_branches`)
 
@@ -532,15 +567,22 @@ Type into Agent:
 
 * The Agent will show a `create_branch` form (repo, base branch, new name). Confirm and submit.
 * Expected: chat confirms creation and returns the new branch name.
-* Local sync: in VS Code, Fetch/Pull. Then switch locally to the new branch:
+* Local sync: Fetch/Pull and switch locally to the new branch:
 
-  - If using VS Code UI: click branch name in status bar → select `feature-text-analyzer`.
-  - Or via terminal:
-
-    ```bash
-    git fetch
-    git checkout feature-text-analyzer
-    ```
+  **VS Code UI Method:**
+  - Click branch name in status bar → select `feature-text-analyzer`
+  
+  **Git CLI Method:**
+  ```bash
+  # Fetch all remote branches
+  git fetch --all
+  
+  # Switch to the feature branch
+  git checkout feature-text-analyzer
+  
+  # Verify you're on the correct branch
+  git branch
+  ```
 
 ### B — Add/update `app.py` on the feature branch
 
@@ -570,7 +612,27 @@ Visual steps:
 * In VS Code Source Control view: click "Pull" 
 * Open the modified file to verify changes were synced
 
-> Alternative: If you prefer local edits, paste the contents into VS Code, save, commit to the `feature-text-analyzer` branch (Source Control UI), and push — either approach is fine. The Agent method shows the MCP tool in action.
+> Alternative: If you prefer local edits, you can modify the file locally:
+>
+> **VS Code UI Method:**
+> - Paste the contents into VS Code, save
+> - Commit to the `feature-text-analyzer` branch using Source Control UI
+> - Push using the sync/publish button
+>
+> **Git CLI Method:**
+> ```bash
+> # Edit app.py locally with your text editor
+> # Then stage the changes
+> git add app.py
+> 
+> # Commit the changes
+> git commit -m "Add Text Analyzer widget (feature-text-analyzer)"
+> 
+> # Push to the remote branch
+> git push origin feature-text-analyzer
+> ```
+>
+> Either approach is fine. The Agent method shows the MCP tool in action, while local edits demonstrate the standard Git workflow.
 
 ### C — Create the Pull Request
 
@@ -661,10 +723,29 @@ Please add review comments inline:
 
 ## 6) Address review comments (optional quick fix)
 
-You can either:
+You can either edit the file locally or use the Agent to make the changes:
 
-* Edit `app.py` locally in VS Code to add the requested guard and comments, commit to `feature-text-analyzer`, and push (Source Control UI); or
-* Ask the Agent to patch the file:
+**Option 1: Local edit**
+
+**VS Code UI Method:**
+* Edit `app.py` locally in VS Code to add the requested guard and comments
+* Commit to `feature-text-analyzer` and push using Source Control UI
+
+**Git CLI Method:**
+```bash
+# Edit app.py in your preferred editor to add the requested changes
+
+# Stage the changes
+git add app.py
+
+# Commit with message explaining the fixes
+git commit -m "Fix: guard None in analyze_text + add docstring (per review)"
+
+# Push the changes to update the PR
+git push origin feature-text-analyzer
+```
+
+**Option 2: Use Agent to patch the file**
 
 Agent prompt to patch:
 
@@ -712,19 +793,27 @@ Agent prompt:
 * Verify by opening the `main` branch in the GitHub repo (via the link in the Agent chat) and show `app.py` now contains the merged changes.
 
 **🔄 LOCAL SYNC REQUIRED:**
+
+**VS Code UI Method:**
+* Click on branch name in status bar → select `main`
+* In Source Control view: click "Pull" 
+* Open app.py to verify it now contains the Text Analyzer code
+
+**Git CLI Method:**
 ```bash
 # IMMEDIATELY after PR merge via MCP
 # Switch to the target branch that received the changes
 git checkout main
-git pull
-# Verify the merged changes now appear locally
-code app.py  # Open to verify content includes Text Analyzer
-```
 
-Visual steps:
-* In VS Code: click on branch name in status bar → select `main`
-* In Source Control view: click "Pull" 
-* Open app.py to verify it now contains the Text Analyzer code
+# Pull the latest changes
+git pull
+
+# Verify the merged changes now appear locally
+cat app.py  # View content to confirm Text Analyzer code is present
+
+# Alternatively, you can check the latest commit to see merge details
+git log -1 --stat
+```
 
 ---
 
@@ -1008,6 +1097,13 @@ Agent prompt (after Copilot produced patch and you accept it):
 * PR will be created and will reference the issue with `Fixes #<ISSUE_NUMBER>` which closes the issue on merge.
 
 **🔄 LOCAL SYNC REQUIRED:**
+
+**VS Code UI Method:**
+* Click on branch name in status bar → select `fix/analyze-text-None-guard`
+* In Source Control view: click "Pull"
+* Verify files in the editor match the expected changes
+
+**Git CLI Method:**
 ```bash
 # IMMEDIATELY after branch + file creation + PR via MCP
 # Fetch and switch to the new branch
@@ -1016,14 +1112,12 @@ git checkout fix/analyze-text-None-guard
 git pull
 
 # Verify the files were created/updated properly
-code app.py  # Check that the None guard was added
-code tests/tests_analyze_text.py  # Check the test file was created
-```
+cat app.py  # Check that the None guard was added
+cat tests/tests_analyze_text.py  # Check the test file was created
 
-Visual steps:
-* In VS Code: click on branch name in status bar → select `fix/analyze-text-None-guard`
-* In Source Control view: click "Pull"
-* Verify files in the editor match the expected changes
+# You can also examine the diff to see what changed
+git diff HEAD~1 app.py
+```
 
 > Note: This uses tools covered in earlier stages (create\_branch, create\_or\_update\_file, create\_pull\_request). If you want, we can do this in the demo after Copilot produces the patch.
 
@@ -1481,16 +1575,22 @@ Open Copilot Chat in VS Code → **Agent** → ensure **MCP Server: GitHub** too
 (Confirm the branch creation in the form.)
 
 **🔄 LOCAL SYNC REQUIRED:**
+
+**VS Code UI Method:**
+* Click on branch name in status bar → select `stage5-security-setup`
+* Or in Source Control view: click the branch name and select from dropdown
+
+**Git CLI Method:**
 ```bash
 # IMMEDIATELY after branch creation via MCP
 git fetch --all --prune
 git checkout stage5-security-setup
 git pull
-```
 
-Visual steps:
-* In VS Code: click on branch name in status bar → select `stage5-security-setup`
-* Or in Source Control view: click the branch name and select from dropdown
+# Verify you're on the correct branch
+git branch
+git status
+```
 
 ### 2 — Add CodeQL workflow on that branch
 
@@ -1852,6 +1952,7 @@ git pull
 
 **Note:** At this point, you need to setup your local environment to track the fork:
 
+**Git CLI Method:**
 ```bash
 # Add the fork as a remote (if you haven't cloned it yet)
 git remote add fork https://github.com/your-username/demo-streamlit.git
@@ -1864,7 +1965,15 @@ git checkout -b fix/add-contributing --track fork/fix/add-contributing
 
 # Or if the branch already exists remotely
 git checkout -b fix/add-contributing fork/fix/add-contributing
+
+# Verify remotes are set up correctly
+git remote -v
 ```
+
+**VS Code UI Method:**
+* In Source Control view: click three dots (⋯) → Remote → Add Remote...
+* Enter "fork" as the name and your fork URL
+* Click on the branch name in status bar → select the remote branch from "fork" remote
 
 ### 3) Add `CONTRIBUTING.md` (or modify README) on the fork branch
 
@@ -1971,6 +2080,13 @@ If the account you use to run merge is the upstream repo maintainer, you can mer
 **Verification:** open upstream `main` and show `CONTRIBUTING.md` now present.
 
 **🔄 LOCAL SYNC REQUIRED:**
+
+**VS Code UI Method:**
+* In VS Code: click on branch name in status bar → select `main`
+* In Source Control view: click "Pull" to get the merged changes
+* Verify CONTRIBUTING.md now appears in your main branch
+
+**Git CLI Method:**
 ```bash
 # If you're in your upstream clone (original repo):
 git checkout main
@@ -1983,12 +2099,11 @@ git fetch upstream
 git checkout main
 git merge upstream/main  # Or git rebase upstream/main
 git push origin main     # Push the changes to your fork
-```
 
-Visual steps:
-* In VS Code: click on branch name in status bar → select `main`
-* In Source Control view: click "Pull" to get the merged changes
-* Verify CONTRIBUTING.md now appears in your main branch
+# Verify the file is present in main branch
+ls -la CONTRIBUTING.md
+git log --follow CONTRIBUTING.md  # Check commit history of the file
+```
 
 ### Scenario 2 — You are the contributor (only fork owner)
 
