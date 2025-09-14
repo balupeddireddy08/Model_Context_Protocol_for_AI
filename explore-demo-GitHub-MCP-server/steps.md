@@ -2,14 +2,51 @@
 
 This document provides a complete, step-by-step guide for demonstrating the capabilities of a GitHub MCP Server using VS Code and Copilot Chat in Agent mode. Each stage covers a different aspect of the software development lifecycle, from repository creation to security scanning and cross-repo collaboration.
 
+## 🔑 Important Demonstration Rules
+
+1. **ALWAYS sync local and remote repositories**: After any MCP action that changes GitHub, immediately sync your local workspace.
+2. **Use explicit Copilot Agent prompts**: Copy the exact prompts provided in each stage.
+3. **Verify each step**: Follow the verification checkpoints to ensure everything works correctly.
+
 ## Table of Contents
 
-- [Stage 1 — VS Code + GitHub MCP Server](#stage-1--vs-code--github-mcp-server)
-- [Stage 2 — PR & Review Flow](#stage-2--pr--review-flow)
-- [Stage 3 — Issues & Collaboration](#stage-3--issues--collaboration)
-- [Stage 4 — Notifications & Productivity](#stage-4--notifications--productivity)
-- [Stage 5 — Security & Code Insights](#stage-5--security--code-insights)
-- [Stage 6 — Fork & Cross-Repo Collaboration](#stage-6--fork--cross-repo-collaboration)
+### [⚙️ Global Reference](#global-reference)
+- [Commands and Prompts Reference](#quick-reference--commands-and-prompts-global)
+- [Local Sync Rule (CRITICAL)](#-local-sync-rule-critical-for-all-stages)
+- [Prerequisites](#preconditions-quick)
+
+### [🚀 Stage 1 — VS Code + GitHub MCP Server](#stage-1--vs-code--github-mcp-server)
+- [Initial Repository Creation](#1-create-the-repo-create_repository)
+- [Branch Management](#4-create-a-branch-feature-1-create_branch)
+- [File Operations](#5-add-or-update-files-local-first-mcp-optional)
+- [Example Workflow](#example-agent-conversation-transcript-step-by-step-with-sync)
+
+### [📝 Stage 2 — PR & Review Flow](#stage-2--pr--review-flow)
+- [Feature Branch and Code Changes](#2-vs-code--copilot-agent-prompts--exact-lines-to-paste)
+- [Pull Request Creation](#c--create-the-pull-request)
+- [PR Review and Approval](#4-request-copilot-review-ai-assisted--request_copilot_review)
+- [Merge Process](#8-merge-the-pull-request--merge_pull_request)
+
+### [🔄 Stage 3 — Issues & Collaboration](#stage-3--issues--collaboration)
+- [Issue Management](#2-exact-copilot-agent-prompts--create-the-issue)
+- [Issue Updates](#3-update-the-issue--add-priority-milestone-and-assignee-use-update_issue)
+- [Copilot Assistance](#5-assign-copilot-to-the-issue-assign_copilot_to_issue)
+
+### [🔔 Stage 4 — Notifications & Productivity](#stage-4--notifications--productivity)
+- [Notification Generation](#a--prepare-demo-notifications-quick-way-to-generate-items)
+- [Notification Management](#b--list-notifications-list_notifications)
+- [Subscription Controls](#e--manage-repository-notification-subscription-manage_repository_notification_subscription)
+
+### [🔒 Stage 5 — Security & Code Insights](#stage-5--security--code-insights)
+- [CodeQL Setup](#b--add-files-via-copilot-agent-recommended-demo-path)
+- [Secret Scanning](#d--part-2-secrets-detection--detect-the-dummy-secret)
+- [Code Search](#e--part-3-proactive-code-search--hunt-for-risky-patterns)
+- [Dependabot](#f--part-4-dependency-security-dependabot)
+
+### [🔀 Stage 6 — Fork & Cross-Repo Collaboration](#stage-6--fork--cross-repo-collaboration)
+- [Fork Creation](#1-create-the-fork)
+- [Cross-Repo PR](#4-open-a-pr-from-fork--upstream)
+- [Merge Process](#d--merge-flow--maintainers)
 
 ---
 
@@ -26,6 +63,8 @@ This document provides a complete, step-by-step guide for demonstrating the capa
 * Files you can paste into VS Code and commit from the editor
 * Exact Copilot Chat prompts and the expected behavior/responses
 
+# Global Reference
+
 ## Quick Reference — Commands and Prompts (Global)
 
 Use these throughout all stages to keep local and remote identical and to drive MCP tool usage.
@@ -36,6 +75,9 @@ Local git commands (run in VS Code terminal):
 # Ensure you have latest from remote
 git fetch --all --prune
 
+# Create local 'main' branch to track 'origin/main'
+git switch --track origin/main
+
 # Switch branches locally
 git checkout <branch>
 
@@ -43,7 +85,7 @@ git checkout <branch>
 git checkout -b <new-branch>
 
 # Pull latest changes for current branch
-git pull
+git pull --rebase
 
 # Stage, commit, push (local-first workflow)
 git add -A
@@ -72,7 +114,24 @@ Search code:        Search code in repo "demo-streamlit" for "<pattern>" and ret
 Fork:               Fork the repository "demo-streamlit" from owner "<upstream_owner>" into my account.
 ```
 
-Sync rule (applies to all stages): If an MCP action changes GitHub (creates branch, updates/deletes files, merges PR), immediately `git pull` locally on the relevant branch so local == remote.
+### 🔄 LOCAL SYNC RULE (CRITICAL FOR ALL STAGES)
+
+After ANY MCP action that changes GitHub (creates branch, updates/deletes files, merges PR), immediately run these commands to sync your local workspace:
+
+```bash
+# After branch creation via MCP
+git fetch --all --prune
+git checkout <branch-name>  # Switch to the branch MCP created
+
+# After file changes via MCP (while on the correct branch)
+git pull
+
+# After PR merge via MCP
+git checkout main  # Switch to the target branch of the merge
+git pull  # Pull in the merged changes
+```
+
+Without these sync steps, your local repository will get out of sync with the remote!
 
 ---
 
@@ -217,7 +276,18 @@ Copilot prompt:
 What to expect:
 
 * Agent will call `create_branch` and confirm creation. The chat will show success and the new branch name.
-* Afterward, sync locally: in VS Code Source Control, click the three-dot menu → Fetch (or Pull) so the new branch appears locally.
+
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+# IMMEDIATELY after branch creation via MCP
+git fetch --all --prune
+git checkout feature-1
+# Verify you're now on the feature-1 branch
+```
+
+Visual steps:
+* In VS Code Source Control view, click the three-dot menu → Fetch
+* Click on the branch name in the status bar → select `feature-1` from the dropdown
 
 ### 5) Add or update files (local-first; MCP optional)
 
@@ -239,7 +309,19 @@ def greet(name="world"):
 What to expect:
 
 * The Agent will present the `create_or_update_file` tool form with content preview → confirm → file created.
-* Immediately run Pull in VS Code so your local workspace reflects the remote change.
+
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+# IMMEDIATELY after file creation/update via MCP
+# Make sure you're on the branch where MCP made the change
+git checkout main  # or whichever branch you specified in the MCP command
+git pull  # Pull in the remote changes
+# Verify the file appears in your local workspace
+```
+
+Visual steps:
+* In VS Code Source Control view, click the "Pull" button or use the three-dot menu → Pull
+* Open the file to verify it has the expected content
 
 ### 6) Push local commits to GitHub (local-first)
 
@@ -267,6 +349,18 @@ What to expect:
 
 * Agent will run `delete_file` and confirm deletion. The chat will show success and updated file list.
 
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+# IMMEDIATELY after file deletion via MCP
+git checkout main  # or whichever branch you specified in the MCP command
+git pull  # Pull to sync the deletion
+# Verify the file has been removed from your local workspace
+```
+
+Visual steps:
+* In VS Code Source Control view, click "Pull" or use the three-dot menu → Pull
+* Check that the deleted file no longer appears in your file explorer
+
 ---
 
 ## How to do the same actions with VS Code UI (fallback & visual verification)
@@ -292,16 +386,39 @@ Both approaches — Copilot Agent tool calls and the VS Code Git UI — are visi
 
 ---
 
-## Example Agent conversation transcript (what you'll actually type)
+## Example Agent conversation transcript (step-by-step with sync)
 
-1. Type: ` Create a repo named "demo-streamlit" with description "MCP Server demo - Stage 1" (public).` → confirm tool parameters → submit.
-2. Locally in VS Code: add the files (`app.py`, `requirements.txt`, `.gitignore`, `README.md`), commit, and Push `main`.
-3. Type: ` Create branch "feature-1" based on "main".` → submit.
-4. Locally: Fetch/Pull so `feature-1` appears in your workspace.
-5. Type: ` Show branches in demo-streamlit.` → observe the list in chat.
-6. Type: ` Delete file "helpers.py" from branch "main".` → submit. Then locally: Pull to reflect the deletion.
+1. **Create repository**:
+   - Type: ` Create a repo named "demo-streamlit" with description "MCP Server demo - Stage 1" (public).`
+   - Confirm tool parameters → submit
+   - *No sync needed yet (first creating local files)*
+
+2. **Setup local repository**:
+   - Locally in VS Code: add the files (`app.py`, `requirements.txt`, `.gitignore`, `README.md`)
+   - Initialize repository, stage all, commit with message "Initial Streamlit app (Stage 1)" 
+   - Push `main` branch (set remote URL to the repo MCP created)
+
+3. **Create feature branch**:
+   - Type: ` Create branch "feature-1" based on "main".` → submit
+   - **🔄 LOCAL SYNC**: `git fetch --all --prune && git checkout feature-1`
+   - *Verify you're now on the feature-1 branch in VS Code*
+
+4. **List branches**:
+   - Type: ` Show branches in demo-streamlit.` → observe the list in chat
+
+5. **Create a file via MCP** (optional demonstration):
+   - Type: ` Create file "helpers.py" on branch "main" with content: def greet(name="world"): return f"Hello, {name}!"` → submit
+   - **🔄 LOCAL SYNC**: `git checkout main && git pull`
+   - *Verify the new file appears in your workspace*
+
+6. **Delete a file via MCP**:
+   - Type: ` Delete file "helpers.py" from branch "main".` → submit
+   - **🔄 LOCAL SYNC**: `git pull` (while on main branch)
+   - *Verify the file is removed from your workspace*
 
 The Agent will show confirmations and links to created resources; click them to open GitHub pages.
+
+**Important**: After EVERY MCP action that modifies the repository, immediately sync your local workspace using the appropriate git commands to avoid getting out of sync.
 
 (If the Agent asks for missing details, fill the fields — this is part of the MCP elicitation flow.)
 
@@ -312,6 +429,9 @@ The Agent will show confirmations and links to created resources; click them to 
 [4]: https://github.com/github/github-mcp-server?utm_source=chatgpt.com "GitHub's official MCP Server"
 
 
+[⬆️ Back to Table of Contents](#table-of-contents) | [⏩ Next: Stage 2](#stage-2--pr--review-flow)
+
+---
 
 # Stage 2 — PR & Review Flow
 
@@ -428,7 +548,21 @@ Commit message: "Add Text Analyzer widget (feature-text-analyzer)"
 
 * The Agent will surface the `create_or_update_file` tool form (path, content preview, commit message, branch). Confirm and submit.
 * Expected: Agent returns success with a commit SHA and link to the file on GitHub.
-* Local sync: Pull in VS Code (or run `git pull`) while on `feature-text-analyzer` so your local reflects the remote commit.
+
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+# IMMEDIATELY after file creation/update via MCP
+# Ensure you're on the correct branch
+git checkout feature-text-analyzer
+git pull
+
+# Verify the updated file appears with new content
+code app.py  # Open the file to check the content
+```
+
+Visual steps:
+* In VS Code Source Control view: click "Pull" 
+* Open the modified file to verify changes were synced
 
 > Alternative: If you prefer local edits, paste the contents into VS Code, save, commit to the `feature-text-analyzer` branch (Source Control UI), and push — either approach is fine. The Agent method shows the MCP tool in action.
 
@@ -570,12 +704,21 @@ Agent prompt:
 
 * The Agent calls `merge_pull_request`. Expected reply includes merge commit SHA and link to the merged commit.
 * Verify by opening the `main` branch in the GitHub repo (via the link in the Agent chat) and show `app.py` now contains the merged changes.
-* Local sync: Switch locally back to `main` and Pull to receive the merge:
 
-  ```bash
-  git checkout main
-  git pull
-  ```
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+# IMMEDIATELY after PR merge via MCP
+# Switch to the target branch that received the changes
+git checkout main
+git pull
+# Verify the merged changes now appear locally
+code app.py  # Open to verify content includes Text Analyzer
+```
+
+Visual steps:
+* In VS Code: click on branch name in status bar → select `main`
+* In Source Control view: click "Pull" 
+* Open app.py to verify it now contains the Text Analyzer code
 
 ---
 
@@ -615,6 +758,10 @@ Agent prompt:
 8. *(Optional)  Update file "app.py" ... commit message: "Fix: guard None in analyze\_text + add docstring (per review)"}*
 9. ` Submit a review for PR #<PR_NUMBER> with event APPROVE and body "Changes addressed; approving for merge."`
 10. ` Merge pull request #<PR_NUMBER> in repo "demo-streamlit" into "main" using "squash" merge strategy.`
+
+[⬆️ Back to Table of Contents](#table-of-contents) | [⏪ Previous: Stage 1](#stage-1--vs-code--github-mcp-server) | [⏩ Next: Stage 3](#stage-3--issues--collaboration)
+
+---
 
 # Stage 3 — Issues & Collaboration
 
@@ -854,13 +1001,23 @@ Agent prompt (after Copilot produced patch and you accept it):
 * Agent will sequence `create_branch` → `create_or_update_file` (for each file) → `create_pull_request`.
 * PR will be created and will reference the issue with `Fixes #<ISSUE_NUMBER>` which closes the issue on merge.
 
-Local sync sequence afterwards:
-
+**🔄 LOCAL SYNC REQUIRED:**
 ```bash
+# IMMEDIATELY after branch + file creation + PR via MCP
+# Fetch and switch to the new branch
 git fetch --all --prune
 git checkout fix/analyze-text-None-guard
 git pull
+
+# Verify the files were created/updated properly
+code app.py  # Check that the None guard was added
+code tests/tests_analyze_text.py  # Check the test file was created
 ```
+
+Visual steps:
+* In VS Code: click on branch name in status bar → select `fix/analyze-text-None-guard`
+* In Source Control view: click "Pull"
+* Verify files in the editor match the expected changes
 
 > Note: This uses tools covered in earlier stages (create\_branch, create\_or\_update\_file, create\_pull\_request). If you want, we can do this in the demo after Copilot produces the patch.
 
@@ -932,6 +1089,10 @@ Message: "Please propose a patch for analyze_text(): add a None guard, docstring
 3. Add a clarifying comment (show conversation).
 4. Assign Copilot and show the generated patch in chat — discuss the quality and where a human would refine.
 5. Optionally accept the patch and let Copilot open a PR — then continue Stage 2 review/merge flow.
+
+[⬆️ Back to Table of Contents](#table-of-contents) | [⏪ Previous: Stage 2](#stage-2--pr--review-flow) | [⏩ Next: Stage 4](#stage-4--notifications--productivity)
+
+---
 
 Awesome — moving on to **Stage 4: Notifications & Productivity**. Below is a complete, VS Code + Copilot (Agent) focused implementation that you can run live. It uses the MCP tools only (no `gh` CLI / REST in the demo). This stage exercises:
 
@@ -1175,6 +1336,10 @@ This toggles watching/unwatching a specific repo. Use it to demonstrate controll
 * When demonstrating subscribe/unsubscribe, create *two* test items to clearly show the difference (one while unsubscribed, one while subscribed).
 * At the end of the demo, run ` Mark all my notifications as read` so your inbox is cleaned for the next run.
 
+[⬆️ Back to Table of Contents](#table-of-contents) | [⏪ Previous: Stage 3](#stage-3--issues--collaboration) | [⏩ Next: Stage 5](#stage-5--security--code-insights)
+
+---
+
 Great — Stage 5 (Security & Code Insights) implemented in full. Below you'll find everything you need to run the **4-part Security Story** in your single demo repo (`demo-streamlit`) using **VS Code + Copilot Agent (MCP: GitHub)** only. No `gh`/REST required — all MCP tool prompts are included.
 
 I'll give you:
@@ -1309,13 +1474,17 @@ Open Copilot Chat in VS Code → **Agent** → ensure **MCP Server: GitHub** too
 
 (Confirm the branch creation in the form.)
 
-Local sync:
-
+**🔄 LOCAL SYNC REQUIRED:**
 ```bash
+# IMMEDIATELY after branch creation via MCP
 git fetch --all --prune
 git checkout stage5-security-setup
 git pull
 ```
+
+Visual steps:
+* In VS Code: click on branch name in status bar → select `stage5-security-setup`
+* Or in Source Control view: click the branch name and select from dropdown
 
 ### 2 — Add CodeQL workflow on that branch
 
@@ -1324,11 +1493,20 @@ git pull
 Commit message: "chore: add CodeQL workflow (stage5)"
 ```
 
-After Agent confirms creation, Pull locally to mirror the remote change:
-
+**🔄 LOCAL SYNC REQUIRED:**
 ```bash
+# IMMEDIATELY after file creation via MCP
+# Make sure you're on the correct branch
+git checkout stage5-security-setup
 git pull
+
+# Verify the file appears in your workspace
+ls -la .github/workflows/  # Check the workflow file exists
 ```
+
+Visual steps:
+* In VS Code Source Control view: click "Pull"
+* Navigate to the file in Explorer to confirm it exists
 
 ### 3 — Add Dependabot config
 
@@ -1337,7 +1515,12 @@ git pull
 Commit message: "chore: add dependabot config (stage5)"
 ```
 
-Local sync: `git pull`
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+git checkout stage5-security-setup  # Make sure you're on the correct branch
+git pull
+ls -la .github/  # Verify the file was created
+```
 
 ### 4 — Add vulnerable package.json
 
@@ -1346,7 +1529,12 @@ Local sync: `git pull`
 Commit message: "chore: add vulnerable package.json (lodash@4.17.19)"
 ```
 
-Local sync: `git pull`
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+git checkout stage5-security-setup
+git pull
+cat package.json  # Verify the file contains the vulnerable lodash version
+```
 
 ### 5 — Add `.env` with dummy secret (for secret scanning demonstration)
 
@@ -1355,7 +1543,12 @@ Local sync: `git pull`
 Commit message: "test: add dummy secret for secret scanning demo"
 ```
 
-Local sync: `git pull`
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+git checkout stage5-security-setup
+git pull
+cat .env  # Verify the dummy secret is in your local workspace
+```
 
 ### 6 — Push all changes / open PR
 
@@ -1551,8 +1744,9 @@ Local note: If you added files via MCP, your local branch already pulled those c
 * **Dependabot not creating PRs quickly** — Confirm `dependabot.yml` location and syntax; check the Dependabot logs under Security → Dependabot. For private registries you must configure credentials. ([GitHub Docs][8])
 * **MCP tool returns permission errors** — Copilot/MCP uses the token configured in VS Code; ensure it has repo write and security-event/code-scanning scopes where needed. The Agent will show permission errors and you can adjust settings in GitHub/Copilot. ([GitHub Docs][9])
 
+[⬆️ Back to Table of Contents](#table-of-contents) | [⏪ Previous: Stage 4](#stage-4--notifications--productivity) | [⏩ Next: Stage 6](#stage-6--fork--cross-repo-collaboration)
 
-Which would you like next?
+---
 
 [1]: https://docs.github.com/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning-with-codeql?utm_source=chatgpt.com "About code scanning with CodeQL - GitHub Docs"
 [2]: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates?utm_source=chatgpt.com "Configuring Dependabot version updates - GitHub Docs"
@@ -1650,6 +1844,22 @@ git pull
 
 * Agent calls `create_branch` on the fork repo. Confirm the branch creation.
 
+**Note:** At this point, you need to setup your local environment to track the fork:
+
+```bash
+# Add the fork as a remote (if you haven't cloned it yet)
+git remote add fork https://github.com/your-username/demo-streamlit.git
+
+# Fetch all branches from the fork
+git fetch fork
+
+# Checkout the new branch from the fork
+git checkout -b fix/add-contributing --track fork/fix/add-contributing
+
+# Or if the branch already exists remotely
+git checkout -b fix/add-contributing fork/fix/add-contributing
+```
+
 ### 3) Add `CONTRIBUTING.md` (or modify README) on the fork branch
 
 ```
@@ -1659,7 +1869,25 @@ Commit message: "Add contributing guidelines (demo)"
 ```
 
 * Agent calls `create_or_update_file` on the fork. Confirm.
-* Local sync: Pull on `fix/add-contributing` to mirror the remote commit.
+
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+# Ensure you're on the branch that tracks the fork's branch
+git checkout fix/add-contributing
+
+# If you've set up fork as a remote:
+git pull fork fix/add-contributing
+
+# Or if you're directly tracking the branch:
+git pull
+
+# Verify the file was created
+cat CONTRIBUTING.md
+```
+
+Visual steps:
+* In VS Code Source Control view: click "Pull"
+* Check that CONTRIBUTING.md appears in your file explorer
 
 ### 4) Open a PR from fork → upstream
 
@@ -1735,7 +1963,26 @@ If the account you use to run merge is the upstream repo maintainer, you can mer
 * Agent calls `merge_pull_request` and (if allowed) it will merge PR and return commit SHA and merged URL.
 
 **Verification:** open upstream `main` and show `CONTRIBUTING.md` now present.
-**Local sync:** In your upstream clone, `git checkout main && git pull` to receive the merge. In your fork clone, optionally `git fetch upstream && git merge upstream/main` or rebase to bring the merge into your fork.
+
+**🔄 LOCAL SYNC REQUIRED:**
+```bash
+# If you're in your upstream clone (original repo):
+git checkout main
+git pull
+
+# If you want to update your fork's main branch too:
+# First ensure upstream is configured as a remote
+git remote add upstream https://github.com/upstream_owner/demo-streamlit.git
+git fetch upstream
+git checkout main
+git merge upstream/main  # Or git rebase upstream/main
+git push origin main     # Push the changes to your fork
+```
+
+Visual steps:
+* In VS Code: click on branch name in status bar → select `main`
+* In Source Control view: click "Pull" to get the merged changes
+* Verify CONTRIBUTING.md now appears in your main branch
 
 ### Scenario 2 — You are the contributor (only fork owner)
 
@@ -1791,6 +2038,10 @@ If you are not a maintainer, you cannot merge the PR yourself. Instead:
 8. ` Request a Copilot review for PR #<PR_NUMBER>.`
    9a. If you are maintainer: ` Merge pull request #<PR_NUMBER> using "squash".`
    9b. If you are contributor: show upstream maintainer the PR and explain merge steps.
+
+---
+
+[⬆️ Back to Table of Contents](#table-of-contents) | [⏪ Previous: Stage 5](#stage-5--security--code-insights)
 
 ---
 
