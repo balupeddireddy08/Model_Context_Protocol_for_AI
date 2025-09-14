@@ -17,14 +17,62 @@ This document provides a complete, step-by-step guide for demonstrating the capa
 
 ## What Stage 1 Delivers
 
-* Create a **demo repo** and baseline **Streamlit** app entirely from **VS Code** using:
+* Create a **demo repo** and baseline **Streamlit** app using a **local-first workflow** in **VS Code**.
 
-  * Copilot Chat in **Agent** mode (selecting **MCP Server: GitHub** tools) to call MCP tools:
-
-    * `create_repository`, `create_branch`, `list_branches`, `create_or_update_file`, `push_files` (represented by commit+push), `delete_file`
-  * Native VS Code Source Control and Git UI as the fallback, visual verification, and local editing
+  * You add/edit files locally, commit locally, and push to GitHub using VS Code Source Control.
+  * Use Copilot Chat in **Agent** mode (MCP Server: GitHub) primarily for repo/branch management, and optionally for remote file ops. If you make any remote change via MCP, immediately pull locally so local = remote.
+  * MCP tools used: `create_repository`, `list_branches`, `create_branch`, `delete_file` (optional), `create_or_update_file` (optional; if used, follow with a local pull).
+* Explicit sync guidance to keep local and GitHub identical
 * Files you can paste into VS Code and commit from the editor
 * Exact Copilot Chat prompts and the expected behavior/responses
+
+## Quick Reference — Commands and Prompts (Global)
+
+Use these throughout all stages to keep local and remote identical and to drive MCP tool usage.
+
+Local git commands (run in VS Code terminal):
+
+```bash
+# Ensure you have latest from remote
+git fetch --all --prune
+
+# Switch branches locally
+git checkout <branch>
+
+# Create branch locally from current HEAD
+git checkout -b <new-branch>
+
+# Pull latest changes for current branch
+git pull
+
+# Stage, commit, push (local-first workflow)
+git add -A
+git commit -m "<message>"
+git push -u origin <branch>
+```
+
+Typical Copilot Agent prompts (MCP: GitHub):
+
+```text
+Create repository:  Create a new repository named "demo-streamlit" (public). Description: "MCP Server demo - Stage 1".
+List branches:      List branches in repository "demo-streamlit".
+Create branch:      Create a branch named "<branch>" in repo "demo-streamlit", based on "<base>".
+Create/update file: Create or update file "<path>" on branch "<branch>" in repo "demo-streamlit" with the following content: <CONTENT>. Commit message: "<message>".
+Delete file:        Delete file "<path>" from branch "<branch>" in repo "demo-streamlit" with message "<message>".
+Create PR:          Create a pull request from branch "<head>" into "<base>" in repo "demo-streamlit". Title: "<title>". Body: "<body>".
+PR diff:            Show the diff for pull request #<PR_NUMBER> in repo "demo-streamlit".
+PR files:           List the files changed in pull request #<PR_NUMBER> for repo "demo-streamlit".
+Copilot review:     Request a Copilot review for pull request #<PR_NUMBER> in repo "demo-streamlit". Focus on: <criteria>.
+Submit review:      Create and submit a pull request review for PR #<PR_NUMBER> in "demo-streamlit". Review event: <APPROVE|REQUEST_CHANGES|COMMENT>. Review body: "<text>".
+Merge PR:           Merge pull request #<PR_NUMBER> in repo "demo-streamlit" into "main" using "<merge|squash|rebase>".
+Notifications:      List my notifications. Dismiss notification with id "<ID>". Mark all my notifications as read.
+Watch/unwatch:      Subscribe me to repository notifications for "demo-streamlit" (watch). / Unsubscribe notifications for "demo-streamlit".
+Security:           List code scanning alerts in repo "demo-streamlit". Get details for alert id "<ID>". List secret scanning alerts ... Get secret alert "<ID>".
+Search code:        Search code in repo "demo-streamlit" for "<pattern>" and return paths and line numbers.
+Fork:               Fork the repository "demo-streamlit" from owner "<upstream_owner>" into my account.
+```
+
+Sync rule (applies to all stages): If an MCP action changes GitHub (creates branch, updates/deletes files, merges PR), immediately `git pull` locally on the relevant branch so local == remote.
 
 ---
 
@@ -105,6 +153,16 @@ This repository is the baseline for the MCP Server demo. It contains a minimal S
 
 ---
 
+## Local ↔ Remote sync rules (keep them identical)
+
+Follow these simple rules to ensure your local workspace always matches GitHub:
+
+- Prefer local-first: edit locally → Commit → Push. Avoid remote edits unless demoing MCP.
+- If you use MCP to change the remote (create/update/delete files, create branches), immediately run Pull in VS Code so local reflects the remote.
+- Before starting new local work, Fetch/Pull to ensure you are up to date.
+
+---
+
 ## Exact Copilot Chat (Agent) prompts to call MCP tools
 
 Open **Copilot Chat** in VS Code (title-bar icon) → **Agent** mode → click the **tools** icon and enable **MCP Server: GitHub**. Then paste these prompts one by one into the chat input (the Agent will show tool parameters for you to confirm). For best demo clarity, keep the prompts short and explicit — the Agent will ask for missing parameters if needed.
@@ -116,7 +174,7 @@ Open **Copilot Chat** in VS Code (title-bar icon) → **Agent** mode → click t
 Copilot prompt:
 
 ```
-Agent: Use the GitHub MCP Server to create a new repository named "demo-streamlit" with description "MCP Server demo - Stage 1" and make it public.
+ Use the GitHub MCP Server to create a new repository named "demo-streamlit" with description "MCP Server demo - Stage 1" and make it public.
 ```
 
 What to expect:
@@ -125,27 +183,23 @@ What to expect:
 * The MCP server will create the repo and the Agent will show a success message and the repo URL.
 * In VS Code you can open the repo URL (link shown in chat) to verify.
 
-### 2) Create (local) `main` branch and add files (edit in VS Code)
+### 2) Create (local) `main` branch and add files (local-first)
 
-This step is done in VS Code editor + Source Control UI (no tool call needed) — create files in the workspace and commit locally. (You'll later use the Agent to push files if you prefer.)
+Do this locally in VS Code (no MCP tool needed):
 
-Suggested Copilot prompt (optional) — to have the Agent create files remotely instead of local editing:
+1. Create the files shown above in your workspace.
+2. Open the Source Control view → Initialize Repository (if needed).
+3. Stage all, enter a commit message (e.g., "Initial Streamlit app (Stage 1)") → Commit.
+4. Publish/Push the `main` branch to the GitHub repo created in step 1 (set the remote if prompted).
 
-```
-Agent: Create a file at path "app.py" with the following content: <paste app.py content>. Put it on branch "main".
-```
-
-What to expect:
-
-* The Agent will show the `create_or_update_file` tool with parameters (path, content, commit message, branch). Confirm and the file will be created in the GitHub repo on `main`.
-* If you prefer local editing, just paste the files into your VS Code workspace and save them.
+Note: You can optionally have the Agent create/update files remotely (see step 5), but always pull locally afterward to keep local and remote identical.
 
 ### 3) List branches (`list_branches`)
 
 Copilot prompt:
 
 ```
-Agent: List branches in the repository "demo-streamlit".
+ List branches in the repository "demo-streamlit".
 ```
 
 What to expect:
@@ -157,26 +211,27 @@ What to expect:
 Copilot prompt:
 
 ```
-Agent: Create a branch named "feature-1" in repo "demo-streamlit", based on "main".
+ Create a branch named "feature-1" in repo "demo-streamlit", based on "main".
 ```
 
 What to expect:
 
 * Agent will call `create_branch` and confirm creation. The chat will show success and the new branch name.
+* Afterward, sync locally: in VS Code Source Control, click the three-dot menu → Fetch (or Pull) so the new branch appears locally.
 
-### 5) Add or update files (`create_or_update_file`)
+### 5) Add or update files (local-first; MCP optional)
 
-If you created files locally, use VS Code Source Control to commit and push; if you want the Agent to place files directly in GitHub:
+Preferred: edit locally, commit, and push with VS Code Source Control. Optional: use the Agent to create/update files remotely (then immediately Pull locally to sync).
 Copilot prompt:
 
 ```
-Agent: Add file "requirements.txt" with content "streamlit>=1.0" to branch "main" in "demo-streamlit".
+ Add file "requirements.txt" with content "streamlit>=1.0" to branch "main" in "demo-streamlit".
 ```
 
 Or to add `helpers.py` remotely:
 
 ```
-Agent: Create file "helpers.py" on branch "main" with content:
+ Create file "helpers.py" on branch "main" with content:
 def greet(name="world"):
     return f"Hello, {name}!"
 ```
@@ -184,25 +239,18 @@ def greet(name="world"):
 What to expect:
 
 * The Agent will present the `create_or_update_file` tool form with content preview → confirm → file created.
+* Immediately run Pull in VS Code so your local workspace reflects the remote change.
 
-### 6) Push multiple files / commit equivalent (`push_files`)
+### 6) Push local commits to GitHub (local-first)
 
-If you committed locally and want the Agent to push, it will normally call `create_or_update_file` multiple times or use the git-data flow if available. Suggested prompt (Agent will present options):
-
-```
-Agent: Commit and push the current workspace files (app.py, requirements.txt, .gitignore, README.md) to branch "main" of "demo-streamlit" with commit message "Initial Streamlit app (Stage 1)".
-```
-
-What to expect:
-
-* The Agent uses MCP file/commit tools to create the commit on GitHub and confirm the new commit SHA and repo state.
+Use VS Code Source Control to Push (or Publish Branch) your local commits to `main`. No MCP tool is required for this step. Use `list_branches` to confirm branches if needed.
 
 ### 7) List branches again to confirm (`list_branches`)
 
 Copilot prompt (same as step 3):
 
 ```
-Agent: Show branches in demo-streamlit.
+ Show branches in demo-streamlit.
 ```
 
 Expect to see both `main` and `feature-1`.
@@ -212,7 +260,7 @@ Expect to see both `main` and `feature-1`.
 Copilot prompt:
 
 ```
-Agent: Delete file "helpers.py" from branch "main" in repo "demo-streamlit" with message "Delete helpers.py (demo)".
+ Delete file "helpers.py" from branch "main" in repo "demo-streamlit" with message "Delete helpers.py (demo)".
 ```
 
 What to expect:
@@ -237,21 +285,21 @@ Both approaches — Copilot Agent tool calls and the VS Code Git UI — are visi
 ## Verification checkpoints (what to show during demo)
 
 * After `create_repository`: Open the repo URL shown by the Agent in the chat and show file list (should be empty until files added).
-* After `create_or_update_file` / commit & push: Reload the repo page in the browser and show `app.py`, `requirements.txt`, `.gitignore`, `README.md`.
+* After local commit & push: Reload the repo page in the browser and show `app.py`, `requirements.txt`, `.gitignore`, `README.md`.
 * After `create_branch`: In the GitHub repo UI show the branch selector → both `main` and `feature-1`.
-* After `delete_file`: Show the file no longer present in the repo UI.
+* After `delete_file` (remote via MCP): Show the file no longer present in the repo UI, then run Pull in VS Code and show that the local workspace reflects the deletion.
 * Use Copilot Chat to `list_branches` and show the returned branch list in the chat window.
 
 ---
 
 ## Example Agent conversation transcript (what you'll actually type)
 
-1. Type: `Agent: Create a repo named "demo-streamlit" with description "MCP Server demo - Stage 1" (public).` → confirm tool parameters → submit.
-2. Type: `Agent: Create file "app.py" on branch "main" with the following content:` → paste `app.py` → confirm → submit.
-3. Type: `Agent: Create file "requirements.txt" on branch "main" with content "streamlit>=1.0".` → submit.
-4. Type: `Agent: Create branch "feature-1" based on "main".` → submit.
-5. Type: `Agent: Show branches in demo-streamlit.` → observe the list in chat.
-6. Type: `Agent: Delete file "helpers.py" from branch "main".` → submit.
+1. Type: ` Create a repo named "demo-streamlit" with description "MCP Server demo - Stage 1" (public).` → confirm tool parameters → submit.
+2. Locally in VS Code: add the files (`app.py`, `requirements.txt`, `.gitignore`, `README.md`), commit, and Push `main`.
+3. Type: ` Create branch "feature-1" based on "main".` → submit.
+4. Locally: Fetch/Pull so `feature-1` appears in your workspace.
+5. Type: ` Show branches in demo-streamlit.` → observe the list in chat.
+6. Type: ` Delete file "helpers.py" from branch "main".` → submit. Then locally: Pull to reflect the deletion.
 
 The Agent will show confirmations and links to created resources; click them to open GitHub pages.
 
@@ -353,24 +401,34 @@ Open **Copilot Chat** → switch to **Agent mode** → verify **MCP Server: GitH
 Type into Agent:
 
 ```
-Agent: Create a branch named "feature-text-analyzer" in repo "demo-streamlit", based on "main".
+ Create a branch named "feature-text-analyzer" in repo "demo-streamlit", based on "main".
 ```
 
 * The Agent will show a `create_branch` form (repo, base branch, new name). Confirm and submit.
 * Expected: chat confirms creation and returns the new branch name.
+* Local sync: in VS Code, Fetch/Pull. Then switch locally to the new branch:
+
+  - If using VS Code UI: click branch name in status bar → select `feature-text-analyzer`.
+  - Or via terminal:
+
+    ```bash
+    git fetch
+    git checkout feature-text-analyzer
+    ```
 
 ### B — Add/update `app.py` on the feature branch
 
 Type into Agent (large paste — paste the full `app.py` contents above):
 
 ```
-Agent: Create or update file "app.py" on branch "feature-text-analyzer" in repo "demo-streamlit" with the following content:
+ Create or update file "app.py" on branch "feature-text-analyzer" in repo "demo-streamlit" with the following content:
 <PASTE THE FULL app.py CONTENT HERE>
 Commit message: "Add Text Analyzer widget (feature-text-analyzer)"
 ```
 
 * The Agent will surface the `create_or_update_file` tool form (path, content preview, commit message, branch). Confirm and submit.
 * Expected: Agent returns success with a commit SHA and link to the file on GitHub.
+* Local sync: Pull in VS Code (or run `git pull`) while on `feature-text-analyzer` so your local reflects the remote commit.
 
 > Alternative: If you prefer local edits, paste the contents into VS Code, save, commit to the `feature-text-analyzer` branch (Source Control UI), and push — either approach is fine. The Agent method shows the MCP tool in action.
 
@@ -379,11 +437,12 @@ Commit message: "Add Text Analyzer widget (feature-text-analyzer)"
 Type into Agent:
 
 ```
-Agent: Create a pull request from branch "feature-text-analyzer" into "main" in repo "demo-streamlit". Title: "Add Text Analyzer widget". Body: "This PR adds a Text Analyzer widget to the Streamlit demo for Stage 2. It introduces a simple tokenizer, word/char counts, and top words display."
+ Create a pull request from branch "feature-text-analyzer" into "main" in repo "demo-streamlit". Title: "Add Text Analyzer widget". Body: "This PR adds a Text Analyzer widget to the Streamlit demo for Stage 2. It introduces a simple tokenizer, word/char counts, and top words display."
 ```
 
 * The Agent will show the `create_pull_request` form (head, base, title, body). Confirm and submit.
 * Expected: PR created, Agent returns PR number/URL.
+* Local note: ensure your local `feature-text-analyzer` branch is pushed (if you committed locally). If PR was created via MCP using remote commits, your local is already up-to-date if you pulled after step B.
 
 ---
 
@@ -396,7 +455,7 @@ Now we exercise `get_pull_request_diff` and `get_pull_request_files`.
 Type into Agent (use the PR number or URL returned in previous step; Agent may populate it automatically):
 
 ```
-Agent: Show the diff for pull request #<PR_NUMBER> in repo "demo-streamlit".
+ Show the diff for pull request #<PR_NUMBER> in repo "demo-streamlit".
 ```
 
 * The Agent calls `get_pull_request_diff` and should return the unified diff (or a summary) in chat.
@@ -407,7 +466,7 @@ Agent: Show the diff for pull request #<PR_NUMBER> in repo "demo-streamlit".
 Type into Agent:
 
 ```
-Agent: List the files changed in pull request #<PR_NUMBER> for repo "demo-streamlit".
+ List the files changed in pull request #<PR_NUMBER> for repo "demo-streamlit".
 ```
 
 * The Agent calls `get_pull_request_files` and returns the file list (e.g., `app.py`).
@@ -422,7 +481,7 @@ This is the MCP tool that asks Copilot (AI) to review the PR and provide suggest
 Type into Agent:
 
 ```
-Agent: Request a Copilot review for pull request #<PR_NUMBER> in repo "demo-streamlit". Ask Copilot to focus on: (1) obvious security issues (no eval/use of unsafe functions), (2) clarity/readability of code, (3) simple performance or correctness problems. Return suggested changes and a short summary.
+ Request a Copilot review for pull request #<PR_NUMBER> in repo "demo-streamlit". Ask Copilot to focus on: (1) obvious security issues (no eval/use of unsafe functions), (2) clarity/readability of code, (3) simple performance or correctness problems. Return suggested changes and a short summary.
 ```
 
 * The Agent will call `request_copilot_review`. Copilot will respond with a review report (summary + suggested edits).
@@ -441,7 +500,7 @@ We'll use a sample review: leave two comments and request changes (or approve). 
 Type into Agent (example that requests a small change):
 
 ```
-Agent: Create and submit a pull request review for PR #<PR_NUMBER> in "demo-streamlit". 
+ Create and submit a pull request review for PR #<PR_NUMBER> in "demo-streamlit". 
 Review event: REQUEST_CHANGES
 Review body: "Thanks — this is a great start. Two small items before merging:
 1) In app.py please add a small guard: if text is None: treat as empty string (to avoid errors).
@@ -470,13 +529,14 @@ You can either:
 Agent prompt to patch:
 
 ```
-Agent: Update file "app.py" on branch "feature-text-analyzer" in repo "demo-streamlit" to:
+ Update file "app.py" on branch "feature-text-analyzer" in repo "demo-streamlit" to:
 1) Add a docstring to analyze_text explaining the tokenizer.
 2) Add a guard: if s is None: s = "" at the start of analyze_text.
 Commit message: "Fix: guard None in analyze_text + add docstring (per review)"
 ```
 
 * The Agent will run `create_or_update_file` and create a new commit on the feature branch. The PR will update automatically.
+* Local sync: After the Agent updates the remote, Pull locally on `feature-text-analyzer` to keep local identical.
 
 ---
 
@@ -485,13 +545,13 @@ Commit message: "Fix: guard None in analyze_text + add docstring (per review)"
 * Option A: Re-request Copilot review:
 
 ```
-Agent: Re-run Copilot review for PR #<PR_NUMBER> focusing on the updated analyze_text changes.
+ Re-run Copilot review for PR #<PR_NUMBER> focusing on the updated analyze_text changes.
 ```
 
 * Option B: Submit an approving review (human):
 
 ```
-Agent: Submit a review for PR #<PR_NUMBER> with event APPROVE and body "Changes addressed; approving for merge."
+ Submit a review for PR #<PR_NUMBER> with event APPROVE and body "Changes addressed; approving for merge."
 ```
 
 Either action will call the appropriate MCP tool and update PR status.
@@ -505,24 +565,30 @@ When PR is ready, merge it. Choose merge strategy (merge/squash/rebase) in the A
 Agent prompt:
 
 ```
-Agent: Merge pull request #<PR_NUMBER> in repo "demo-streamlit" into "main" using "squash" merge strategy. Commit message: "Add Text Analyzer — squash merge".
+ Merge pull request #<PR_NUMBER> in repo "demo-streamlit" into "main" using "squash" merge strategy. Commit message: "Add Text Analyzer — squash merge".
 ```
 
 * The Agent calls `merge_pull_request`. Expected reply includes merge commit SHA and link to the merged commit.
 * Verify by opening the `main` branch in the GitHub repo (via the link in the Agent chat) and show `app.py` now contains the merged changes.
+* Local sync: Switch locally back to `main` and Pull to receive the merge:
+
+  ```bash
+  git checkout main
+  git pull
+  ```
 
 ---
 
 ## 9) Verification checklist (what to show to the audience)
 
 * After branch creation: Copilot chat lists `feature-text-analyzer`. Show branch selector in GitHub UI too.
-* After file commit: File view on GitHub shows the updated `app.py` on that branch.
+* After file commit: File view on GitHub shows the updated `app.py` on that branch. Then Pull locally and show the same file updated in VS Code.
 * After PR creation: PR page (URL agent returned) shows PR title, description, and changed files tab.
 * `get_pull_request_diff`: show the unified diff returned in chat (or open Files changed on PR).
 * `get_pull_request_files`: confirm `app.py` appears.
 * Copilot review: show the AI review text in chat.
 * Human review: show "Changes requested" or "Approved" status on PR and inline comments.
-* Merge: show merged commit on `main` and the final `app.py` content.
+* Merge: show merged commit on `main` and the final `app.py` content. Then locally switch to `main` and Pull to show the same content.
 
 ---
 
@@ -539,16 +605,16 @@ Agent: Merge pull request #<PR_NUMBER> in repo "demo-streamlit" into "main" usin
 
 ## 11) Example Agent transcript (copyable)
 
-1. `Agent: Create a branch named "feature-text-analyzer" in repo "demo-streamlit", based on "main".`
-2. `Agent: Create or update file "app.py" on branch "feature-text-analyzer" in repo "demo-streamlit" with the following content:` *(paste full app.py)*
-3. `Agent: Create a pull request from branch "feature-text-analyzer" into "main" in repo "demo-streamlit". Title: "Add Text Analyzer widget". Body: "This PR adds a Text Analyzer widget to the Streamlit demo for Stage 2..."`
-4. `Agent: Show the diff for pull request #<PR_NUMBER> in repo "demo-streamlit".`
-5. `Agent: List the files changed in pull request #<PR_NUMBER> for repo "demo-streamlit".`
-6. `Agent: Request a Copilot review for pull request #<PR_NUMBER> in repo "demo-streamlit"...`
-7. `Agent: Create and submit a pull request review for PR #<PR_NUMBER> with event REQUEST_CHANGES ...`
-8. *(Optional) Agent: Update file "app.py" ... commit message: "Fix: guard None in analyze\_text + add docstring (per review)"}*
-9. `Agent: Submit a review for PR #<PR_NUMBER> with event APPROVE and body "Changes addressed; approving for merge."`
-10. `Agent: Merge pull request #<PR_NUMBER> in repo "demo-streamlit" into "main" using "squash" merge strategy.`
+1. ` Create a branch named "feature-text-analyzer" in repo "demo-streamlit", based on "main".`
+2. ` Create or update file "app.py" on branch "feature-text-analyzer" in repo "demo-streamlit" with the following content:` *(paste full app.py)*
+3. ` Create a pull request from branch "feature-text-analyzer" into "main" in repo "demo-streamlit". Title: "Add Text Analyzer widget". Body: "This PR adds a Text Analyzer widget to the Streamlit demo for Stage 2..."`
+4. ` Show the diff for pull request #<PR_NUMBER> in repo "demo-streamlit".`
+5. ` List the files changed in pull request #<PR_NUMBER> for repo "demo-streamlit".`
+6. ` Request a Copilot review for pull request #<PR_NUMBER> in repo "demo-streamlit"...`
+7. ` Create and submit a pull request review for PR #<PR_NUMBER> with event REQUEST_CHANGES ...`
+8. *(Optional)  Update file "app.py" ... commit message: "Fix: guard None in analyze\_text + add docstring (per review)"}*
+9. ` Submit a review for PR #<PR_NUMBER> with event APPROVE and body "Changes addressed; approving for merge."`
+10. ` Merge pull request #<PR_NUMBER> in repo "demo-streamlit" into "main" using "squash" merge strategy.`
 
 # Stage 3 — Issues & Collaboration
 
@@ -579,6 +645,7 @@ Below is everything: ready-to-paste issue content, exact Agent prompts to run in
 * Copilot Chat open → **Agent** mode → enable **MCP Server: GitHub** in tools.
 * You previously created `demo-streamlit` and have `main` and `feature-text-analyzer` branches (from Stage 1/2).
 * Your Copilot/MCP token has permissions to create/update issues and assign tools.
+* Sync tip: If you later let MCP create a branch/PR or make remote file edits, immediately run `git fetch`/`git pull` locally and switch to that branch to keep local identical.
 
 ---
 
@@ -625,7 +692,7 @@ This is beginner-friendly. Copilot may be able to suggest the code changes and p
 Open Copilot Chat → **Agent** → paste the prompt:
 
 ```
-Agent: Create an issue in repo "demo-streamlit".
+ Create an issue in repo "demo-streamlit".
 Title: "Text Analyzer: handle None input and improve tokenizer stopword filtering"
 Body: <paste the exact markdown body above>
 Labels: bug, enhancement, triage-needed
@@ -649,7 +716,7 @@ After creating the issue you may want to update metadata. Example: set `priority
 Agent prompt (paste):
 
 ```
-Agent: Update the issue #<ISSUE_NUMBER> in repo "demo-streamlit".
+ Update the issue #<ISSUE_NUMBER> in repo "demo-streamlit".
 Set labels: bug, enhancement, priority/high, ready
 Set milestone: "v1.0"   # create the milestone if it does not exist
 Assignees: <your-github-username>
@@ -663,6 +730,8 @@ Comment: "Triage: setting milestone v1.0 and assigning to <your-github-username>
 
 **What to show:** Issue page reflecting label/milestone/assignee updates.
 
+Local note: Issue operations are metadata-only and do not affect your working tree. No local git action needed.
+
 ---
 
 ## 4) Add clarifying comments (`add_issue_comment`)
@@ -672,7 +741,7 @@ Use `add_issue_comment` for discussion, reproduction logs, or to paste small cod
 Agent prompt:
 
 ```
-Agent: Add a comment to issue #<ISSUE_NUMBER> in repo "demo-streamlit" with this content:
+ Add a comment to issue #<ISSUE_NUMBER> in repo "demo-streamlit" with this content:
 "Thanks — I will triage this. Quick note: can you paste a small example string that triggers the tokenizer problem? Also, I plan to add a `remove_stopwords` flag defaulting to False so behavior is opt-in."
 ```
 
@@ -687,7 +756,7 @@ This unique MCP tool signals Copilot to take responsibility for assisting on the
 Agent prompt:
 
 ```
-Agent: Assign Copilot to assist on issue #<ISSUE_NUMBER> in repo "demo-streamlit". 
+ Assign Copilot to assist on issue #<ISSUE_NUMBER> in repo "demo-streamlit". 
 Scope: propose code changes and unit tests.
 Message for Copilot: "Please propose a patch for analyze_text() that:
 - Adds a None guard (treat None as empty string)
@@ -702,6 +771,8 @@ Message for Copilot: "Please propose a patch for analyze_text() that:
 * If your MCP configuration supports automated PR creation by Copilot, the Agent may provide an option to create a branch/PR. Confirm only if you want the code auto-created.
 
 **If Copilot returns a patch**: It will usually appear as a code block or list of edits. You can (a) accept and ask the Agent to apply changes (calls `create_or_update_file`, `create_branch`, `create_pull_request`), or (b) copy-paste the patch into VS Code and apply manually.
+
+Sync rule: If the Agent applies the patch remotely, immediately Pull locally on the target branch so your workspace matches GitHub.
 
 ---
 
@@ -775,13 +846,21 @@ If you want Copilot to implement the patch automatically and open a PR that refe
 Agent prompt (after Copilot produced patch and you accept it):
 
 ```
-Agent: Create a new branch named "fix/analyze-text-None-guard" in repo "demo-streamlit" and apply the patch Copilot suggested to app.py and add tests/tests_analyze_text.py. Commit message: "Fix: None guard and optional stopword filter (fixes #<ISSUE_NUMBER>)". Then open a pull request into main with title "Fix analyze_text None guard and stopword filtering" and body "Fixes #<ISSUE_NUMBER>".
+ Create a new branch named "fix/analyze-text-None-guard" in repo "demo-streamlit" and apply the patch Copilot suggested to app.py and add tests/tests_analyze_text.py. Commit message: "Fix: None guard and optional stopword filter (fixes #<ISSUE_NUMBER>)". Then open a pull request into main with title "Fix analyze_text None guard and stopword filtering" and body "Fixes #<ISSUE_NUMBER>".
 ```
 
 **What to expect:**
 
 * Agent will sequence `create_branch` → `create_or_update_file` (for each file) → `create_pull_request`.
 * PR will be created and will reference the issue with `Fixes #<ISSUE_NUMBER>` which closes the issue on merge.
+
+Local sync sequence afterwards:
+
+```bash
+git fetch --all --prune
+git checkout fix/analyze-text-None-guard
+git pull
+```
 
 > Note: This uses tools covered in earlier stages (create\_branch, create\_or\_update\_file, create\_pull\_request). If you want, we can do this in the demo after Copilot produces the patch.
 
@@ -802,7 +881,7 @@ Agent: Create a new branch named "fix/analyze-text-None-guard" in repo "demo-str
 **Create issue**
 
 ```
-Agent: Create an issue in repo "demo-streamlit".
+ Create an issue in repo "demo-streamlit".
 Title: "Text Analyzer: handle None input and improve tokenizer stopword filtering"
 Body: <paste issue markdown>
 Labels: bug, enhancement, triage-needed
@@ -811,7 +890,7 @@ Labels: bug, enhancement, triage-needed
 **Update issue**
 
 ```
-Agent: Update issue #12 in repo "demo-streamlit".
+ Update issue #12 in repo "demo-streamlit".
 Set labels: bug, enhancement, priority/high, ready
 Set milestone: "v1.0"
 Assignees: my-github-username
@@ -821,14 +900,14 @@ Comment: "Triage: setting milestone v1.0 and assigning to <username>."
 **Add comment**
 
 ```
-Agent: Add a comment to issue #12 in repo "demo-streamlit" saying:
+ Add a comment to issue #12 in repo "demo-streamlit" saying:
 "Thanks — can you paste a small example string that triggers the tokenizer problem? I'll assign Copilot to propose a patch."
 ```
 
 **Assign Copilot**
 
 ```
-Agent: Assign Copilot to assist on issue #12 in repo "demo-streamlit".
+ Assign Copilot to assist on issue #12 in repo "demo-streamlit".
 Scope: propose code changes and unit tests.
 Message: "Please propose a patch for analyze_text(): add a None guard, docstring, optional remove_stopwords param, and pytest tests."
 ```
@@ -840,7 +919,7 @@ Message: "Please propose a patch for analyze_text(): add a None guard, docstring
 * **Agent requests missing fields**: Agent will show forms for `create_issue` or `update_issue` — fill them. This is normal.
 * **Permission denied on assignee**: Some repos restrict assignees to repo members; if you see an error, either ask to add yourself as a collaborator or skip assigning.
 * **Milestone creation blocked**: Org policies may limit milestone creation; create manually in GitHub UI if needed.
-* **Copilot not producing a patch**: If `assign_copilot_to_issue` returns only a plan not code, ask explicitly: `Agent: Produce the patch now as a diff for me to apply.`
+* **Copilot not producing a patch**: If `assign_copilot_to_issue` returns only a plan not code, ask explicitly: ` Produce the patch now as a diff for me to apply.`
 * **Applying automated patch fails**: If you ask the Agent to create files/commits and it fails due to branch protection, either disable protection for demo or create the branch and open a PR for checks to run.
 * **Conflicting local edits**: If you edit files locally and Copilot also edits them remotely, resolve conflicts in VS Code (Source Control UI) before merging.
 
@@ -896,19 +975,28 @@ Exact Copilot prompts (Agent) to generate notifications:
 * Create a tiny PR (if not already):
 
 ```
-Agent: Create a branch "notif-demo-branch" on repo "demo-streamlit" from "main", add a one-line change to README.md ("notif demo"), commit with message "notif demo", and open a pull request into main titled "Notification demo PR".
+ Create a branch "notif-demo-branch" on repo "demo-streamlit" from "main", add a one-line change to README.md ("notif demo"), commit with message "notif demo", and open a pull request into main titled "Notification demo PR".
 ```
+
+After the Agent confirms the branch and commit:
+
+```bash
+git fetch --all --prune
+git checkout notif-demo-branch
+git pull
+```
+Make any additional local tweaks if needed, commit and push, or stay read-only to keep the focus on notification generation.
 
 * Request review from a user (replace `<reviewer>` with a GitHub username — for the demo you can request review from yourself or a demo collaborator):
 
 ```
-Agent: For the pull request just created (#<PR_NUMBER>), request review from "<reviewer>".
+ For the pull request just created (#<PR_NUMBER>), request review from "<reviewer>".
 ```
 
 * Create an issue comment that mentions you:
 
 ```
-Agent: Create an issue in repo "demo-streamlit" titled "Notif mention test" with body "Tagging @<your-github-username> to generate a demo notification." and then add a comment that says "@<your-github-username> please review."
+ Create an issue in repo "demo-streamlit" titled "Notif mention test" with body "Tagging @<your-github-username> to generate a demo notification." and then add a comment that says "@<your-github-username> please review."
 ```
 
 > Note: When you run these prompts, the Agent will create real GitHub objects that will generate notifications. Wait a few seconds for GitHub to push notifications to your account.
@@ -920,7 +1008,7 @@ Agent: Create an issue in repo "demo-streamlit" titled "Notif mention test" with
 **Agent prompt**
 
 ```
-Agent: List my notifications. Return unread notifications first and show: repository, subject (type/title), reason (e.g., review_requested, mention), updated_at, and the notification ID.
+ List my notifications. Return unread notifications first and show: repository, subject (type/title), reason (e.g., review_requested, mention), updated_at, and the notification ID.
 ```
 
 **What the Agent will show**
@@ -938,13 +1026,14 @@ Agent: List my notifications. Return unread notifications first and show: reposi
 
 * Show the returned list in Copilot chat.
 * Click the link(s) to open the PR/issue on GitHub and demonstrate the same item in the UI.
+* If you took local actions (commits/pushes), ensure you've pushed so GitHub has generated notifications; otherwise, create notifications via MCP as shown above and then Pull locally if you want local to reflect those remote commits.
 
 **Tips**
 
 * Ask the Agent to limit results (e.g., only unread) if your inbox is large:
 
 ```
-Agent: List my unread notifications for repo "demo-streamlit".
+ List my unread notifications for repo "demo-streamlit".
 ```
 
 ---
@@ -956,7 +1045,7 @@ Pick one notification `id` from the list the Agent returned.
 **Agent prompt**
 
 ```
-Agent: Dismiss notification with id "<NOTIF_ID>".
+ Dismiss notification with id "<NOTIF_ID>".
 ```
 
 **What to expect**
@@ -966,7 +1055,7 @@ Agent: Dismiss notification with id "<NOTIF_ID>".
 
 **Verification**
 
-1. Run `Agent: List my unread notifications` again — the dismissed ID should no longer appear.
+1. Run ` List my unread notifications` again — the dismissed ID should no longer appear.
 2. Open the GitHub notifications UI ([https://github.com/notifications](https://github.com/notifications)) and show the same notification is marked read/archived.
 
 **Demo tip**
@@ -980,7 +1069,7 @@ Agent: Dismiss notification with id "<NOTIF_ID>".
 **Agent prompt**
 
 ```
-Agent: Mark all my notifications as read.
+ Mark all my notifications as read.
 ```
 
 **What to expect**
@@ -990,7 +1079,7 @@ Agent: Mark all my notifications as read.
 
 **Verification**
 
-* `Agent: List my unread notifications` should return an empty list (or only new ones created afterward).
+* ` List my unread notifications` should return an empty list (or only new ones created afterward).
 * Show GitHub notifications page in browser to confirm "All caught up" or zero unread.
 
 **Caution**
@@ -1006,13 +1095,13 @@ This toggles watching/unwatching a specific repo. Use it to demonstrate controll
 **Agent prompt — set to watch**
 
 ```
-Agent: Subscribe me to repository notifications for "demo-streamlit" (watch). I want to receive notifications for all conversations.
+ Subscribe me to repository notifications for "demo-streamlit" (watch). I want to receive notifications for all conversations.
 ```
 
 **Agent prompt — set to ignore/unwatch**
 
 ```
-Agent: Unsubscribe or ignore notifications for repository "demo-streamlit".
+ Unsubscribe or ignore notifications for repository "demo-streamlit".
 ```
 
 **What to expect**
@@ -1032,13 +1121,13 @@ Agent: Unsubscribe or ignore notifications for repository "demo-streamlit".
 * After unsubscribing:
 
 ```
-Agent: Create an issue titled "Notification watch test" in "demo-streamlit" saying "Testing notification subscriptions". 
+ Create an issue titled "Notification watch test" in "demo-streamlit" saying "Testing notification subscriptions". 
 ```
 
 * Wait a few seconds and then:
 
 ```
-Agent: List my unread notifications for repo "demo-streamlit".
+ List my unread notifications for repo "demo-streamlit".
 ```
 
 * Show whether the new issue generated a notification.
@@ -1048,12 +1137,12 @@ Agent: List my unread notifications for repo "demo-streamlit".
 ## F — Example step-by-step demo script (concise)
 
 1. (Optional) Generate a few notifications: create PR, request review, mention yourself in an issue comment (use the Agent prompts in **A**).
-2. `Agent: List my notifications` → show the list.
-3. `Agent: Dismiss notification with id "<first-id>"` → verify by listing notifications again.
-4. `Agent: Mark all my notifications as read` → verify inbox cleared.
-5. `Agent: Unsubscribe from repo "demo-streamlit"` → Agent confirms.
-6. Create a new test issue: `Agent: Create an issue "watch test" ...` → `Agent: List my unread notifications` → verify no notification for that issue.
-7. `Agent: Subscribe to repository "demo-streamlit"` → create another test issue → `Agent: List my unread notifications` → verify the new notification appears.
+2. ` List my notifications` → show the list.
+3. ` Dismiss notification with id "<first-id>"` → verify by listing notifications again.
+4. ` Mark all my notifications as read` → verify inbox cleared.
+5. ` Unsubscribe from repo "demo-streamlit"` → Agent confirms.
+6. Create a new test issue: ` Create an issue "watch test" ...` → ` List my unread notifications` → verify no notification for that issue.
+7. ` Subscribe to repository "demo-streamlit"` → create another test issue → ` List my unread notifications` → verify the new notification appears.
 
 ---
 
@@ -1084,7 +1173,7 @@ Agent: List my unread notifications for repo "demo-streamlit".
 * Before demo: create a few notifications so `list_notifications` shows meaningful results quickly.
 * Use descriptive PR/issue titles so output looks tidy in the chat list (e.g., `"Notif demo PR — please review @me"`).
 * When demonstrating subscribe/unsubscribe, create *two* test items to clearly show the difference (one while unsubscribed, one while subscribed).
-* At the end of the demo, run `Agent: Mark all my notifications as read` so your inbox is cleaned for the next run.
+* At the end of the demo, run ` Mark all my notifications as read` so your inbox is cleaned for the next run.
 
 Great — Stage 5 (Security & Code Insights) implemented in full. Below you'll find everything you need to run the **4-part Security Story** in your single demo repo (`demo-streamlit`) using **VS Code + Copilot Agent (MCP: GitHub)** only. No `gh`/REST required — all MCP tool prompts are included.
 
@@ -1215,48 +1304,70 @@ Open Copilot Chat in VS Code → **Agent** → ensure **MCP Server: GitHub** too
 ### 1 — Create a feature branch for security staging
 
 ```
-Agent: Create a branch named "stage5-security-setup" in repo "demo-streamlit" based on "main".
+ Create a branch named "stage5-security-setup" in repo "demo-streamlit" based on "main".
 ```
 
 (Confirm the branch creation in the form.)
 
+Local sync:
+
+```bash
+git fetch --all --prune
+git checkout stage5-security-setup
+git pull
+```
+
 ### 2 — Add CodeQL workflow on that branch
 
 ```
-Agent: Create file ".github/workflows/codeql.yml" on branch "stage5-security-setup" with the following content: <paste codeql.yml content>
+ Create file ".github/workflows/codeql.yml" on branch "stage5-security-setup" with the following content: <paste codeql.yml content>
 Commit message: "chore: add CodeQL workflow (stage5)"
+```
+
+After Agent confirms creation, Pull locally to mirror the remote change:
+
+```bash
+git pull
 ```
 
 ### 3 — Add Dependabot config
 
 ```
-Agent: Create file ".github/dependabot.yml" on branch "stage5-security-setup" with content: <paste dependabot.yml content>
+ Create file ".github/dependabot.yml" on branch "stage5-security-setup" with content: <paste dependabot.yml content>
 Commit message: "chore: add dependabot config (stage5)"
 ```
+
+Local sync: `git pull`
 
 ### 4 — Add vulnerable package.json
 
 ```
-Agent: Create file "package.json" on branch "stage5-security-setup" with content: <paste package.json content>
+ Create file "package.json" on branch "stage5-security-setup" with content: <paste package.json content>
 Commit message: "chore: add vulnerable package.json (lodash@4.17.19)"
 ```
+
+Local sync: `git pull`
 
 ### 5 — Add `.env` with dummy secret (for secret scanning demonstration)
 
 ```
-Agent: Create file ".env" on branch "stage5-security-setup" with content: AWS_SECRET_ACCESS_KEY=ABCD1234EFGH5678IJKL
+ Create file ".env" on branch "stage5-security-setup" with content: AWS_SECRET_ACCESS_KEY=ABCD1234EFGH5678IJKL
 Commit message: "test: add dummy secret for secret scanning demo"
 ```
+
+Local sync: `git pull`
 
 ### 6 — Push all changes / open PR
 
 ```
-Agent: Create a pull request from "stage5-security-setup" into "main" in repo "demo-streamlit".
+ Create a pull request from "stage5-security-setup" into "main" in repo "demo-streamlit".
 Title: "chore: add security workflows and test artifacts (CodeQL, Dependabot, dummy secret)"
 Body: "Add CodeQL workflow, Dependabot config, a vulnerable package.json and a dummy secret for Stage 5 Security demo."
 ```
 
 > The Agent will call `create_pull_request`. Once PR created, CodeQL action will trigger on the PR and the new commits are present on that branch.
+
+Local note: If you added files via MCP, your local branch already pulled those changes. If you instead edited locally, ensure you `git push` before creating the PR via MCP.
 
 ---
 
@@ -1267,7 +1378,7 @@ Body: "Add CodeQL workflow, Dependabot config, a vulnerable package.json and a d
 1. List CodeQL (code scanning) alerts:
 
 ```
-Agent: List code scanning alerts in repo "demo-streamlit".
+ List code scanning alerts in repo "demo-streamlit".
 ```
 
 (This calls the `list_code_scanning_alerts` MCP tool.)
@@ -1275,7 +1386,7 @@ Agent: List code scanning alerts in repo "demo-streamlit".
 2. Inspect a specific alert (use alert ID returned by previous step):
 
 ```
-Agent: Get details of code scanning alert with id "<ALERT_ID>" in "demo-streamlit".
+ Get details of code scanning alert with id "<ALERT_ID>" in "demo-streamlit".
 ```
 
 (This calls `get_code_scanning_alert`.)
@@ -1301,7 +1412,7 @@ Agent: Get details of code scanning alert with id "<ALERT_ID>" in "demo-streamli
 1. List secret scanning alerts:
 
 ```
-Agent: List secret scanning alerts in repo "demo-streamlit".
+ List secret scanning alerts in repo "demo-streamlit".
 ```
 
 (Calls `list_secret_scanning_alerts`.)
@@ -1309,7 +1420,7 @@ Agent: List secret scanning alerts in repo "demo-streamlit".
 2. Inspect a secret alert:
 
 ```
-Agent: Get secret scanning alert details for alert id "<SECRET_ALERT_ID>" in "demo-streamlit".
+ Get secret scanning alert details for alert id "<SECRET_ALERT_ID>" in "demo-streamlit".
 ```
 
 (Calls `get_secret_scanning_alert`.)
@@ -1335,7 +1446,7 @@ Agent: Get secret scanning alert details for alert id "<SECRET_ALERT_ID>" in "de
 * Search for the dummy secret pattern name:
 
 ```
-Agent: Search code in repo "demo-streamlit" for the string "AWS_SECRET_ACCESS_KEY" and return file path(s) and line numbers.
+ Search code in repo "demo-streamlit" for the string "AWS_SECRET_ACCESS_KEY" and return file path(s) and line numbers.
 ```
 
 (Calls `search_code` — helpful to locate secrets immediately.)
@@ -1343,8 +1454,8 @@ Agent: Search code in repo "demo-streamlit" for the string "AWS_SECRET_ACCESS_KE
 * Search for other risky patterns (e.g., `eval(` or `process.env`):
 
 ```
-Agent: Search code in repo "demo-streamlit" for "eval(" and return file paths and brief snippets.
-Agent: Search code in repo "demo-streamlit" for "process.env" and return matches.
+ Search code in repo "demo-streamlit" for "eval(" and return file paths and brief snippets.
+ Search code in repo "demo-streamlit" for "process.env" and return matches.
 ```
 
 **What to expect:**
@@ -1364,7 +1475,7 @@ Agent: Search code in repo "demo-streamlit" for "process.env" and return matches
 * Ask the Agent to show Dependabot alerts:
 
 ```
-Agent: Show Dependabot alerts for repo "demo-streamlit" (or list dependency security advisories).
+ Show Dependabot alerts for repo "demo-streamlit" (or list dependency security advisories).
 ```
 
 (Dependabot-specific listing might be surfaced by `list_code_scanning_alerts` or by the MCP server exposing Dependabot endpoints — if the MCP server exposes a Dependabot tool, it will use that. Otherwise, you can inspect GitHub Security → Dependabot or use the Agent to open the repo Security page.)
@@ -1372,7 +1483,7 @@ Agent: Show Dependabot alerts for repo "demo-streamlit" (or list dependency secu
 * Show open Dependabot PRs:
 
 ```
-Agent: List open pull requests in repo "demo-streamlit" with label "dependabot".
+ List open pull requests in repo "demo-streamlit" with label "dependabot".
 ```
 
 (Calls `list_pull_requests` filtered by label; depends on the MCP toolset available.)
@@ -1397,30 +1508,30 @@ Agent: List open pull requests in repo "demo-streamlit" with label "dependabot".
 2. Open a PR (Agent prompt included). That PR triggers CodeQL analysis.
 3. Immediately (or after a couple minutes) run:
 
-   * `Agent: List code scanning alerts in repo "demo-streamlit"`.
-   * `Agent: List secret scanning alerts in repo "demo-streamlit"`.
-   * `Agent: Search code for "AWS_SECRET_ACCESS_KEY" in repo "demo-streamlit"`.
-4. If CodeQL or secret scanning reports findings, `Agent: Get code scanning alert <ID>` or `Agent: Get secret scanning alert <ID>` to see details.
-5. For Dependabot, either wait for its scheduled run or manually open a PR to bump `lodash` and then `Agent: List open pull requests with label "dependabot"` to show how Dependabot automates updates.
+   * ` List code scanning alerts in repo "demo-streamlit"`.
+   * ` List secret scanning alerts in repo "demo-streamlit"`.
+   * ` Search code for "AWS_SECRET_ACCESS_KEY" in repo "demo-streamlit"`.
+4. If CodeQL or secret scanning reports findings, ` Get code scanning alert <ID>` or ` Get secret scanning alert <ID>` to see details.
+5. For Dependabot, either wait for its scheduled run or manually open a PR to bump `lodash` and then ` List open pull requests with label "dependabot"` to show how Dependabot automates updates.
 
 ---
 
 ## H — Example Agent prompts (compact pasteable block)
 
 ```
-Agent: Create a branch named "stage5-security-setup" in repo "demo-streamlit" based on "main".
-Agent: Create file ".github/workflows/codeql.yml" on branch "stage5-security-setup" with content: <CODEQL YAML> Commit message: "chore: add CodeQL workflow (stage5)"
-Agent: Create file ".github/dependabot.yml" on branch "stage5-security-setup" with content: <dependabot.yml> Commit message: "chore: add dependabot config (stage5)"
-Agent: Create file "package.json" on branch "stage5-security-setup" with content: <package.json> Commit message: "chore: add vulnerable package.json (lodash@4.17.19)"
-Agent: Create file ".env" on branch "stage5-security-setup" with content: AWS_SECRET_ACCESS_KEY=ABCD1234EFGH5678IJKL Commit message: "test: add dummy secret for secret scanning demo"
-Agent: Create a pull request from "stage5-security-setup" into "main" with title "chore: add security workflows and test artifacts (CodeQL, Dependabot, dummy secret)"
+ Create a branch named "stage5-security-setup" in repo "demo-streamlit" based on "main".
+ Create file ".github/workflows/codeql.yml" on branch "stage5-security-setup" with content: <CODEQL YAML> Commit message: "chore: add CodeQL workflow (stage5)"
+ Create file ".github/dependabot.yml" on branch "stage5-security-setup" with content: <dependabot.yml> Commit message: "chore: add dependabot config (stage5)"
+ Create file "package.json" on branch "stage5-security-setup" with content: <package.json> Commit message: "chore: add vulnerable package.json (lodash@4.17.19)"
+ Create file ".env" on branch "stage5-security-setup" with content: AWS_SECRET_ACCESS_KEY=ABCD1234EFGH5678IJKL Commit message: "test: add dummy secret for secret scanning demo"
+ Create a pull request from "stage5-security-setup" into "main" with title "chore: add security workflows and test artifacts (CodeQL, Dependabot, dummy secret)"
 (wait for CodeQL/action to run)
-Agent: List code scanning alerts in repo "demo-streamlit"
-Agent: Get code scanning alert with id "<ALERT_ID>" in "demo-streamlit"
-Agent: List secret scanning alerts in repo "demo-streamlit"
-Agent: Get secret scanning alert with id "<SECRET_ALERT_ID>" in "demo-streamlit"
-Agent: Search code in repo "demo-streamlit" for "AWS_SECRET_ACCESS_KEY"
-Agent: List open pull requests in repo "demo-streamlit" with label "dependabot"
+ List code scanning alerts in repo "demo-streamlit"
+ Get code scanning alert with id "<ALERT_ID>" in "demo-streamlit"
+ List secret scanning alerts in repo "demo-streamlit"
+ Get secret scanning alert with id "<SECRET_ALERT_ID>" in "demo-streamlit"
+ Search code in repo "demo-streamlit" for "AWS_SECRET_ACCESS_KEY"
+ List open pull requests in repo "demo-streamlit" with label "dependabot"
 ```
 
 ---
@@ -1517,7 +1628,7 @@ Thanks for contributing! For this demo:
 ### 1) Create the fork
 
 ```
-Agent: Fork the repository "demo-streamlit" from owner "upstream_owner" into my account. Use the MCP tool fork_repository. Name the fork "demo-streamlit" (same name).
+ Fork the repository "demo-streamlit" from owner "upstream_owner" into my account. Use the MCP tool fork_repository. Name the fork "demo-streamlit" (same name).
 ```
 
 * Agent will call `fork_repository`. It returns the fork repo URL (e.g., `https://github.com/your-username/demo-streamlit`).
@@ -1526,7 +1637,15 @@ Agent: Fork the repository "demo-streamlit" from owner "upstream_owner" into my 
 ### 2) Create a branch on the fork
 
 ```
-Agent: In my fork "your-username/demo-streamlit", create a branch named "fix/add-contributing" based on "main".
+ In my fork "your-username/demo-streamlit", create a branch named "fix/add-contributing" based on "main".
+```
+
+Local sync (in your local clone that points to the fork remote, or after adding the fork as `origin`):
+
+```bash
+git fetch --all --prune
+git checkout fix/add-contributing
+git pull
 ```
 
 * Agent calls `create_branch` on the fork repo. Confirm the branch creation.
@@ -1534,23 +1653,25 @@ Agent: In my fork "your-username/demo-streamlit", create a branch named "fix/add
 ### 3) Add `CONTRIBUTING.md` (or modify README) on the fork branch
 
 ```
-Agent: Create file "CONTRIBUTING.md" on branch "fix/add-contributing" in repo "your-username/demo-streamlit" with the following content:
+ Create file "CONTRIBUTING.md" on branch "fix/add-contributing" in repo "your-username/demo-streamlit" with the following content:
 <PASTE CONTRIBUTING.md CONTENT>
 Commit message: "Add contributing guidelines (demo)"
 ```
 
 * Agent calls `create_or_update_file` on the fork. Confirm.
+* Local sync: Pull on `fix/add-contributing` to mirror the remote commit.
 
 ### 4) Open a PR from fork → upstream
 
 ```
-Agent: Create a pull request from "your-username:fix/add-contributing" into "upstream_owner:main" on repo "demo-streamlit".
+ Create a pull request from "your-username:fix/add-contributing" into "upstream_owner:main" on repo "demo-streamlit".
 Title: "Add CONTRIBUTING.md (demo from fork)"
 Body: "This PR adds a small CONTRIBUTING.md with simple contributor guidelines. Created from fork for Stage 6 demo."
 ```
 
 * Agent calls `create_pull_request`. Confirm parameters: head should be `your-username:fix/add-contributing`, base `upstream_owner:main`.
 * Agent returns PR number and URL on the upstream repo (e.g., `upstream_owner/demo-streamlit#34`).
+* Local note: If you made local commits, ensure they are pushed to the fork (`git push -u origin fix/add-contributing`) before creating the PR.
 
 **Note:** Most MCP servers and the GitHub API support creating PRs where head references a fork. The Agent UI will show the required fields.
 
@@ -1563,7 +1684,7 @@ These are the MCP calls you'll run to demonstrate inspection & review.
 ### 5) List PRs on upstream and find the fork PR
 
 ```
-Agent: List pull requests on upstream repo "upstream_owner/demo-streamlit". Filter or show PRs with head containing "your-username".
+ List pull requests on upstream repo "upstream_owner/demo-streamlit". Filter or show PRs with head containing "your-username".
 ```
 
 * The Agent will run `list_pull_requests` and return the PR(s). Show the PR URL and number.
@@ -1571,7 +1692,7 @@ Agent: List pull requests on upstream repo "upstream_owner/demo-streamlit". Filt
 ### 6) Show changed files in the PR
 
 ```
-Agent: List the files changed in pull request #<PR_NUMBER> for repo "upstream_owner/demo-streamlit".
+ List the files changed in pull request #<PR_NUMBER> for repo "upstream_owner/demo-streamlit".
 ```
 
 * Agent calls `get_pull_request_files` and returns the changed file(s) (`CONTRIBUTING.md`).
@@ -1579,7 +1700,7 @@ Agent: List the files changed in pull request #<PR_NUMBER> for repo "upstream_ow
 ### 7) Show the PR diff
 
 ```
-Agent: Show the diff for pull request #<PR_NUMBER> in repo "upstream_owner/demo-streamlit".
+ Show the diff for pull request #<PR_NUMBER> in repo "upstream_owner/demo-streamlit".
 ```
 
 * Agent calls `get_pull_request_diff` and returns the unified diff or a summarized version.
@@ -1587,7 +1708,7 @@ Agent: Show the diff for pull request #<PR_NUMBER> in repo "upstream_owner/demo-
 ### 8) (Optional) Request Copilot review on the fork PR
 
 ```
-Agent: Request a Copilot review for PR #<PR_NUMBER> on "upstream_owner/demo-streamlit". Ask Copilot to check:
+ Request a Copilot review for PR #<PR_NUMBER> on "upstream_owner/demo-streamlit". Ask Copilot to check:
 - Clarity of the CONTRIBUTING doc
 - If any point should be added for running local tests
 Return suggested edits and a short summary.
@@ -1608,12 +1729,13 @@ If the account you use to run merge is the upstream repo maintainer, you can mer
 **Agent prompt to merge:**
 
 ```
-Agent: Merge pull request #<PR_NUMBER> in "upstream_owner/demo-streamlit" into "main" using "squash" (or "merge") strategy. Commit message: "Add CONTRIBUTING.md (from fork)". 
+ Merge pull request #<PR_NUMBER> in "upstream_owner/demo-streamlit" into "main" using "squash" (or "merge") strategy. Commit message: "Add CONTRIBUTING.md (from fork)". 
 ```
 
 * Agent calls `merge_pull_request` and (if allowed) it will merge PR and return commit SHA and merged URL.
 
 **Verification:** open upstream `main` and show `CONTRIBUTING.md` now present.
+**Local sync:** In your upstream clone, `git checkout main && git pull` to receive the merge. In your fork clone, optionally `git fetch upstream && git merge upstream/main` or rebase to bring the merge into your fork.
 
 ### Scenario 2 — You are the contributor (only fork owner)
 
@@ -1659,15 +1781,15 @@ If you are not a maintainer, you cannot merge the PR yourself. Instead:
 
 ## H — Demonstration script (compact)
 
-1. `Agent: Fork the repository "demo-streamlit" from owner "upstream_owner" into my account.`
-2. `Agent: Create branch "fix/add-contributing" in my fork.`
-3. `Agent: Add file "CONTRIBUTING.md" on that branch with the sample content.`
-4. `Agent: Create a PR from "your-username:fix/add-contributing" into "upstream_owner:main".`
-5. `Agent: List pull requests on "upstream_owner/demo-streamlit" and find the PR.`
-6. `Agent: Show files changed in PR #<PR_NUMBER>.`
-7. `Agent: Show the PR diff for #<PR_NUMBER>.`
-8. `Agent: Request a Copilot review for PR #<PR_NUMBER>.`
-   9a. If you are maintainer: `Agent: Merge pull request #<PR_NUMBER> using "squash".`
+1. ` Fork the repository "demo-streamlit" from owner "upstream_owner" into my account.`
+2. ` Create branch "fix/add-contributing" in my fork.`
+3. ` Add file "CONTRIBUTING.md" on that branch with the sample content.`
+4. ` Create a PR from "your-username:fix/add-contributing" into "upstream_owner:main".`
+5. ` List pull requests on "upstream_owner/demo-streamlit" and find the PR.`
+6. ` Show files changed in PR #<PR_NUMBER>.`
+7. ` Show the PR diff for #<PR_NUMBER>.`
+8. ` Request a Copilot review for PR #<PR_NUMBER>.`
+   9a. If you are maintainer: ` Merge pull request #<PR_NUMBER> using "squash".`
    9b. If you are contributor: show upstream maintainer the PR and explain merge steps.
 
 ---
