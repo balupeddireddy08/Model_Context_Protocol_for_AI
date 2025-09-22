@@ -100,30 +100,53 @@ graph TB
     style GR fill:#e3f2fd
 ```
 
-### How MCP Communication Works
+### How MCP Registry Works as a Metaregistry
+
+The registry doesn't actually host your code. It's a 'metaregistry' - it stores metadata about packages, but the actual code comes from traditional package registries.
 
 ```mermaid
-sequenceDiagram
-    participant 🤖 as AI Agent/Tool
-    participant 🔌 as MCP Server
-    participant 🌐 as External System
-    participant 📊 as Data Source
+graph LR
+    subgraph "🔍 Discovery Layer"
+        MR[🐙 MCP Registry<br/>github.com/mcp<br/>Metadata & Discovery]
+    end
     
-    🤖->>🔌: 🚀 Initialize Connection
-    🔌-->>🤖: 📋 Available Tools & Capabilities
+    subgraph "📦 Package Registries"
+        NPM[📦 NPM<br/>JavaScript/TypeScript]
+        PYPI[🐍 PyPI<br/>Python Packages]
+        DOCKER[🐳 Docker Hub<br/>Container Images]
+        NUGET[⚡ NuGet<br/>.NET Packages]
+    end
     
-    🤖->>🔌: 🛠️ Execute Tool Request
-    🔌->>🌐: 🔄 Perform Operation
-    🌐->>📊: 📥 Fetch/Update Data
-    📊-->>🌐: 📤 Return Results
-    🌐-->>🔌: ✅ Operation Complete
-    🔌-->>🤖: 📄 Structured Response
+    subgraph "🤖 Developer Workflow"
+        DEV[👨‍💻 Developer]
+        AI[🤖 AI Tool]
+        CODE[💻 Actual Code]
+    end
     
-    🤖->>🔌: 🔍 Follow-up Query
-    🔌-->>🤖: 🎯 Contextual Response
+    DEV -->|1. Browse & Discover| MR
+    MR -.->|Metadata Only| NPM
+    MR -.->|Metadata Only| PYPI
+    MR -.->|Metadata Only| DOCKER
+    MR -.->|Metadata Only| NUGET
     
-    Note over 🤖,📊: All communication follows MCP Protocol Standard
+    DEV -->|2. Install Server| AI
+    AI -->|3. Download Package| NPM
+    AI -->|3. Download Package| PYPI
+    AI -->|3. Download Package| DOCKER
+    AI -->|3. Download Package| NUGET
+    
+    NPM -->|4. Actual Code| CODE
+    PYPI -->|4. Actual Code| CODE
+    DOCKER -->|4. Actual Code| CODE
+    NUGET -->|4. Actual Code| CODE
+    
+    style MR fill:#e3f2fd
+    style CODE fill:#e8f5e8
 ```
+
+When you install an MCP server, the registry tells your AI tool where to find it - whether that's NPM for JavaScript, PyPI for Python, Docker Hub for containers, or NuGet for .NET. Then your tool downloads the actual code from those established, trusted package ecosystems.
+
+This approach leverages existing infrastructure while providing the discoverability layer that was missing. It's the best of both worlds.
 
 ---
 
@@ -873,3 +896,4 @@ pie title Developer Adoption by Platform
 - [ ] 📚 **Read** the MCP specification
 - [ ] 🚀 **Build** your first MCP server
 - [ ] 📤 **Publish** to the registry
+- [ ] 🤝 **Join** the community discussions
