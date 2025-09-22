@@ -275,6 +275,8 @@ git commit -m "Initial Streamlit app (Stage 1)"
 # Set remote (replace USERNAME with your GitHub username)
 git remote add origin https://github.com/USERNAME/demo-streamlit.git
 
+git checkout -b main
+
 # Push to GitHub (create main branch)
 git push -u origin main
 ```
@@ -323,13 +325,13 @@ Preferred: edit locally, commit, and push with VS Code Source Control. Optional:
 Copilot prompt:
 
 ```
- Add file "requirements.txt" with content "streamlit>=1.0" to branch "main" in "demo-streamlit".
+ Add file "requirements.txt" with content "streamlit>=1.0" to branch "feature-1" in "demo-streamlit".
 ```
 
 Or to add `helpers.py` remotely:
 
 ```
- Create file "helpers.py" on branch "main" with content:
+ Create file "helpers.py" on branch "feature-1" with content:
 def greet(name="world"):
     return f"Hello, {name}!"
 ```
@@ -342,7 +344,7 @@ What to expect:
 ```bash
 # IMMEDIATELY after file creation/update via MCP
 # Make sure you're on the branch where MCP made the change
-git checkout main  # or whichever branch you specified in the MCP command
+git checkout feature-1  # or whichever branch you specified in the MCP command
 git pull  # Pull in the remote changes
 # Verify the file appears in your local workspace
 ```
@@ -383,7 +385,7 @@ Expect to see both `main` and `feature-1`.
 Copilot prompt:
 
 ```
- Delete file "helpers.py" from branch "main" in repo "demo-streamlit" with message "Delete helpers.py (demo)".
+ Delete file "helpers.py" from branch "feature-1" in repo "demo-streamlit" with message "Delete helpers.py (demo)".
 ```
 
 What to expect:
@@ -393,7 +395,7 @@ What to expect:
 **🔄 LOCAL SYNC REQUIRED:**
 ```bash
 # IMMEDIATELY after file deletion via MCP
-git checkout main  # or whichever branch you specified in the MCP command
+git checkout feature-1  # or whichever branch you specified in the MCP command
 git pull  # Pull to sync the deletion
 # Verify the file has been removed from your local workspace
 ```
@@ -562,7 +564,7 @@ Open **Copilot Chat** → switch to **Agent mode** → verify **MCP Server: GitH
 Type into Agent:
 
 ```
- Create a branch named "feature-text-analyzer" in repo "demo-streamlit", based on "main".
+ Create a new branch named feature-text-analyzer in the repo demo-streamlit, based on main branch #
 ```
 
 * The Agent will show a `create_branch` form (repo, base branch, new name). Confirm and submit.
