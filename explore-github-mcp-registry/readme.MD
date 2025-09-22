@@ -52,17 +52,15 @@ The **Model Context Protocol (MCP) Registry** is a revolutionary platform that l
 
 ## 🏗️ Architecture Overview
 
-### MCP Registry Ecosystem
+### MCP Registry Architecture
 
 ```mermaid
 graph TB
-    subgraph "🏛️ MCP Registry Ecosystem"
-        GR[🐙 GitHub MCP Registry<br/>github.com/mcp<br/>Curated & Production-Ready]
-        CR[🌍 Community Registry<br/>registry.modelcontextprotocol.io<br/>Open Source & Self-Published]
-        DR[🐳 Docker Registry<br/>docker/mcp-registry<br/>Enterprise Security Features]
+    subgraph "🌐 MCP Registry System"
+        GR[🐙 GitHub MCP Registry<br/>github.com/mcp<br/>Curated Discovery Hub]
     end
     
-    subgraph "📦 Package Registries (Metadata Source)"
+    subgraph "📦 Package Registries"
         NPM[📦 NPM Registry<br/>JavaScript/TypeScript]
         PYPI[🐍 PyPI Registry<br/>Python Packages]
         DOCKER[🐳 Docker Hub<br/>Container Images]
@@ -79,18 +77,18 @@ graph TB
     end
     
     %% Registry connections (metadata only)
-    CR -.->|Metadata Only| NPM
-    CR -.->|Metadata Only| PYPI
-    CR -.->|Metadata Only| DOCKER
-    CR -.->|Metadata Only| NUGET
-    CR -.->|Metadata Only| GITHUB
+    GR -.->|Metadata Only| NPM
+    GR -.->|Metadata Only| PYPI
+    GR -.->|Metadata Only| DOCKER
+    GR -.->|Metadata Only| NUGET
+    GR -.->|Metadata Only| GITHUB
     
     %% Client connections
     GR --> COPILOT
-    CR --> CLAUDE
-    DR --> CURSOR
+    GR --> CLAUDE
+    GR --> CURSOR
     GR --> VSCODE
-    CR --> WINDSURF
+    GR --> WINDSURF
     
     %% Actual code delivery
     NPM -->|📄 Actual Code| COPILOT
@@ -100,8 +98,6 @@ graph TB
     GITHUB -->|📄 Actual Files| WINDSURF
     
     style GR fill:#e3f2fd
-    style CR fill:#f3e5f5
-    style DR fill:#e8f5e8
 ```
 
 ### How MCP Communication Works
@@ -155,29 +151,7 @@ sequenceDiagram
 
 ---
 
-## 📊 Registry Ecosystem
-
-### The Three Pillars of MCP Registry
-
-```mermaid
-mindmap
-  root((🏛️ MCP Registry<br/>Ecosystem))
-    🐙 GitHub Registry
-      Curated Quality
-      Production Ready
-      Partner Verified
-      Copilot Integration
-    🌍 Community Registry  
-      Open Source
-      Self Publishing
-      Developer Friendly
-      API First
-    🐳 Docker Registry
-      Enterprise Security
-      Container Images
-      SBOM Support
-      Signed Images
-```
+## 📊 Registry Overview
 
 ### Server Categories & Use Cases
 
@@ -869,10 +843,9 @@ pie title Developer Adoption by Platform
 ### 🎉 Community Impact
 
 - **🚀 38+ MCP Servers**: Covering all major development workflows
-- **👥 10,000+ Developers**: Actively using MCP Registry
-- **🏢 50+ Enterprise Teams**: Deployed in production environments  
-- **🔧 500+ Daily Integrations**: New server installations
-- **⭐ 95% Satisfaction Rate**: From developer feedback surveys
+- **🏢 Enterprise Adoption**: Deployed in production environments  
+- **🔧 Daily Integrations**: New server installations growing
+- **⭐ High Satisfaction**: Positive developer feedback
 
 ---
 
@@ -900,6 +873,3 @@ pie title Developer Adoption by Platform
 - [ ] 📚 **Read** the MCP specification
 - [ ] 🚀 **Build** your first MCP server
 - [ ] 📤 **Publish** to the registry
-
----
-
