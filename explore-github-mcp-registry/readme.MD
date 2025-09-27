@@ -254,18 +254,6 @@ mindmap
 </tr>
 </table>
 
-### 📈 Usage Statistics
-
-```mermaid
-pie title MCP Server Categories by Popularity
-    "Development & DevOps" : 35
-    "Data & Analytics" : 25
-    "Business Tools" : 20
-    "AI & ML" : 12
-    "Infrastructure" : 8
-```
-
-
 
 ---
 
@@ -401,63 +389,11 @@ sequenceDiagram
 ```
 
 
-
-
-
 ---
-
-## 🛠️ Development Tools
-
-### 🔍 MCP Inspector Tool
-
-The **MCP Inspector** is essential for validating your server before publishing:
-
-```bash
-# Install the inspector
-npm install -g @modelcontextprotocol/inspector
-
-# Test your server
-npx @modelcontextprotocol/inspector npx your-server-name
-
-# Or test locally
-npx @modelcontextprotocol/inspector node server.js
-```
-
-**Inspector Features:**
-- 🔍 **Real-time Tool Testing**: Interactive tool execution
-- 📊 **Performance Metrics**: Response time analysis  
-- 🛡️ **Security Validation**: Protocol compliance checking
-- 📝 **Documentation Generation**: Auto-generated tool docs
-
-### 🏗️ Development Commands
-
-```bash
-# Community Registry Development
-git clone https://github.com/modelcontextprotocol/registry
-cd registry
-
-# Start development environment
-make dev-compose          # Docker Compose with MongoDB
-make dev-local            # Local development
-
-# Build tools
-make build                # Build registry application
-make publisher            # Build publisher CLI
-
-# Testing & Validation
-make test-unit            # Unit tests with coverage
-make test-integration     # Integration tests
-make test-endpoints       # API endpoint testing
-make check               # All checks (lint + tests)
-
-# Code quality
-make lint                 # Run linter (CI equivalent)
-make lint-fix            # Auto-fix linting issues
-```
 
 ### 📊 API Documentation
 
-Live API documentation available at: **[registry.modelcontextprotocol.io/v0/swagger](https://registry.modelcontextprotocol.io/v0/swagger/index.html)**
+Live API documentation available at: **[registry.modelcontextprotocol.io/v0/swagger](https://registry.modelcontextprotocol.io/docs)**
 
 **Key Endpoints:**
 - `GET /v0/servers` - List all servers with pagination
@@ -465,31 +401,7 @@ Live API documentation available at: **[registry.modelcontextprotocol.io/v0/swag
 - `POST /v0/servers` - Publish new server (authenticated)
 - `PUT /v0/servers/{id}` - Update server (authenticated)
 - `DELETE /v0/servers/{id}` - Remove server (authenticated)
-
-
-
 ---
-
-## 🏆 Success Stories
-
-### 📈 Registry Growth Metrics
-
-```mermaid
-xychart-beta
-    title "MCP Registry Growth (2025)"
-    x-axis [Sep, Oct, Nov, Dec]
-    y-axis "Servers Published" 0 --> 100
-    bar [40, 52, 71, 95]
-```
-
-```mermaid
-pie title Developer Adoption by Platform
-    "GitHub Copilot" : 45
-    "Claude Desktop" : 30
-    "VS Code Extensions" : 15
-    "Cursor IDE" : 7
-    "Other Tools" : 3
-```
 
 ### 🎉 Community Impact
 
