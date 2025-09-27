@@ -8,7 +8,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/modelcontextprotocol/registry?style=for-the-badge)](https://github.com/modelcontextprotocol/registry)
 [![Registry Status](https://img.shields.io/badge/Status-Preview%20Release-orange?style=for-the-badge)](https://registry.modelcontextprotocol.io)
-[![Servers Available](https://img.shields.io/badge/Servers-38+-brightgreen?style=for-the-badge)](https://github.com/mcp)
+[![Servers Available](https://img.shields.io/badge/Servers-40+-brightgreen?style=for-the-badge)](https://github.com/mcp)
 
 [🌐 Browse Registry](https://github.com/mcp) • [📖 Documentation](https://modelcontextprotocol.io) • [🛠️ Publish Server](https://registry.modelcontextprotocol.io) • [💬 Community](https://discord.gg/modelcontextprotocol)
 
@@ -153,7 +153,7 @@ This approach leverages existing infrastructure while providing the discoverabil
 
 | Feature | Benefit | Example |
 |---------|---------|---------|
-| **🔍 Centralized Discovery** | Find all servers in one place | Browse 38+ servers by category |
+| **🔍 Centralized Discovery** | Find all servers in one place | Browse 40+ servers by category |
 | **⚡ One-Click Installation** | Instant setup with AI tools | Install GitHub server with single click |
 | **🛡️ Security Validation** | Trusted, vetted sources | Cryptographic signatures on Docker images |
 | **📚 Rich Documentation** | Complete setup guides | Step-by-step integration examples |
@@ -177,7 +177,7 @@ This approach leverages existing infrastructure while providing the discoverabil
 
 ```mermaid
 mindmap
-  root((🛠️ MCP Servers<br/>38+ Available))
+  root((🛠️ MCP Servers<br/>40+ Available))
     💻 Development & DevOps
       GitHub Integration
       Azure DevOps
@@ -479,7 +479,7 @@ xychart-beta
     title "MCP Registry Growth (2025)"
     x-axis [Sep, Oct, Nov, Dec]
     y-axis "Servers Published" 0 --> 100
-    bar [38, 52, 71, 95]
+    bar [40, 52, 71, 95]
 ```
 
 ```mermaid
@@ -493,7 +493,7 @@ pie title Developer Adoption by Platform
 
 ### 🎉 Community Impact
 
-- **🚀 38+ MCP Servers**: Covering all major development workflows
+- **🚀 40+ MCP Servers**: Covering all major development workflows
 - **🏢 Enterprise Adoption**: Deployed in production environments  
 - **🔧 Daily Integrations**: New server installations growing
 - **⭐ High Satisfaction**: Positive developer feedback
@@ -510,9 +510,6 @@ pie title Developer Adoption by Platform
 [![Community Registry](https://img.shields.io/badge/🌍%20Community%20Registry-API-purple?style=for-the-badge)](https://registry.modelcontextprotocol.io)
 [![Documentation](https://img.shields.io/badge/📖%20Full%20Docs-Read-green?style=for-the-badge)](https://modelcontextprotocol.io)
 
-[![Discord Community](https://img.shields.io/badge/💬%20Discord-Join-orange?style=for-the-badge)](https://discord.gg/modelcontextprotocol)
-[![GitHub Discussions](https://img.shields.io/badge/💭%20Discussions-Participate-yellow?style=for-the-badge)](https://github.com/modelcontextprotocol/registry/discussions)
-[![Twitter Updates](https://img.shields.io/badge/🐦%20Twitter-Follow-lightblue?style=for-the-badge)](https://twitter.com/modelcontextprotocol)
 
 </div>
 
